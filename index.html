@@ -1063,7 +1063,7 @@ function enterPhase2() {
     document.body.classList.add("screen-shake");
     
     bossState = "IDLE";
-    nextAttackTime = performance.now() + 2000;
+    nextAttackTime = performance.now();
     redBall.className = "";
     leftHand.classList.remove("orb-hand-fast", "final-hand-travel");
     rightHand.classList.remove("orb-hand-fast", "final-hand-travel");
@@ -1279,10 +1279,11 @@ function updateWallClosingPhase(time) {
     }
     // Being caught by the closing walls damages the player heavily, but the boss
     // remains vulnerable throughout the sequence.
-    const safeLeft = wallWidth + 8;
-    const safeRight = innerWidth - wallWidth - 8;
+    const spikeDepth = 28 + wallCloseProgress * 35;
+    const safeLeft = wallWidth + spikeDepth + 2;
+    const safeRight = innerWidth - wallWidth - spikeDepth - 2;
     if (!isDead && !isWon && (playerX < safeLeft || playerX > safeRight)) {
-        damagePlayer(10, time, 150);
+        damagePlayer(15, time);
     }
 
     if (wallCloseProgress >= 1) {
@@ -2242,17 +2243,21 @@ function gameLoop(time) {
                 resetHandsToNormal();
 
                 bossState = "IDLE";
-                nextAttackTime = time + 3000;
+                nextAttackTime = time;
+
+                // The flying phase is finished: start the breaking/wall-spike phase
+                // immediately instead of waiting for another game-loop condition.
+                startDeathCutscene();
             }
         }
 
-        // Once the flying phase has ended at 20 HP, begin the existing breaking
-        // sequence. The boss is no longer in the normal phase-2 attack loop.
+        // Safety fallback: if the flying phase ended through another path, still
+        // enter the breaking sequence as soon as the 20 HP endpoint is reached.
         if (!isDying && !postFlyPhase && !inP2Transition && p2TransitionEnded && bossHp <= 20) {
             startDeathCutscene();
         }
 
-        const p2StarCompatible = !featherAttackActive && (bossState === "IDLE" ||
+        const p2StarCompatible = !featherAttackActive && bossState !== "P2_CENTER_SPIKE" && (bossState === "IDLE" ||
             bossState === "P2_LASER_PREP" || bossState === "P2_LASER_FIRE" ||
             bossState === "P2_RAIN_FOUNTAIN" || bossState === "P2_RAIN_FALL" ||
             bossState === "P2_HAND_BARRAGE" || bossState === "P2_FLAMETHROWER");
@@ -2303,6 +2308,11 @@ function gameLoop(time) {
         backWingRight.style.transformOrigin = "10% 40%";
         backWingRight.style.transform = `rotate(${wingAnimProgress * 96 - wingFlapOffset * 1.25}deg) translateY(${wingAnimProgress * 28}px) scale(${(1 + wingAnimProgress * 0.38) * wingScaleBonus})`;
 
+        if (bossState === "P2_CENTER_SPIKE" && featherAttackActive) {
+            featherAttackActive = false;
+            resetHandsToNormal();
+        }
+
         if (featherAttackActive) {
             if (time > featherAttackEndTime) {
                 featherAttackActive = false;
@@ -2338,7 +2348,7 @@ function gameLoop(time) {
             }
         }
 
-        if (p2Enraged && !inP2Transition && time > nextEnragedBurstTime) {
+        if (p2Enraged && !inP2Transition && bossState !== "P2_CENTER_SPIKE" && time > nextEnragedBurstTime) {
             const chestX = destroyerX + 352 + (344 - 352) * scale;
             const chestY = destroyerY + 235 * scale;
             const baseAngle = Math.atan2(playerY - chestY, playerX - chestX);
@@ -2434,13 +2444,21 @@ function gameLoop(time) {
                 else if (chosen === 5) {
                     bossState = "P2_CENTER_SPIKE";
                     stateTimer = time + 5200;
+
+                    // This attack is deliberately isolated: clear any lingering
+                    // secondary patterns so only the floor/ceiling spike field runs.
+                    activeStarOutlines = [];
+                    featherAttackActive = false;
+                    bossProjectiles.length = 0;
+
                     bossProjectiles.push({
-                        type: "center_safe_spikes",
-                        cx: innerWidth / 2,
-                        cy: innerHeight / 2,
-                        safeRadius: 65,
-                        warningEndTime: time + 3500,
-                        attackEndTime: time + 4800,
+                        type: "floor_ceiling_diamond_spikes",
+                        warningEndTime: time + 1500,
+                        attackStartTime: time + 1500,
+                        attackEndTime: time + 5000,
+                        columnCount: Math.max(8, Math.ceil(innerWidth / 90)),
+                        gapHeight: 78,
+                        spikeHeight: 0,
                         state: "warning"
                     });
                 }
@@ -2820,73 +2838,97 @@ function gameLoop(time) {
     for (let i = bossProjectiles.length - 1; i >= 0; i--) {
         let p = bossProjectiles[i];
         
-        if (p.type === "center_safe_spikes") {
-            if (time < p.warningEndTime) {
-                const pulse = 1 + Math.sin(time * 0.015) * 0.08;
-                ctx.save();
-                ctx.strokeStyle = "#ff2222";
+        if (p.type === "floor_ceiling_diamond_spikes") {
+            const progress = Math.min(1, Math.max(0, (time - p.attackStartTime) / (p.attackEndTime - p.attackStartTime)));
+            const warning = time < p.warningEndTime;
+            const rise = warning ? 0 : Math.min(1, (time - p.attackStartTime) / 1100);
+            const halfGap = p.gapHeight / 2;
+            const centerY = innerHeight / 2;
+            const spacing = innerWidth / p.columnCount;
+            const diamondWidth = Math.min(spacing * 0.58, 58);
+
+            ctx.save();
+            if (warning) {
+                const pulse = 1 + Math.sin(time * 0.018) * 0.08;
+                ctx.strokeStyle = "#ff3333";
                 ctx.lineWidth = 3;
-                ctx.shadowBlur = 15;
+                ctx.shadowBlur = 14;
                 ctx.shadowColor = "#ff0000";
-                ctx.beginPath();
-                ctx.arc(p.cx, p.cy, p.safeRadius * pulse, 0, Math.PI * 2);
-                ctx.stroke();
-
-                ctx.fillStyle = "rgba(255, 0, 0, 0.12)";
-                ctx.beginPath();
-                ctx.arc(p.cx, p.cy, p.safeRadius * pulse, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.restore();
-            } else if (time < p.attackEndTime) {
-                const progress = Math.min(1, (time - p.warningEndTime) / 250);
-                const fade = Math.max(0, 1 - (time - p.attackEndTime + 300) / 300);
-
-                ctx.save();
-                ctx.globalAlpha = fade;
-                
-                ctx.strokeStyle = "#ffffff";
-                ctx.lineWidth = 4;
-                ctx.shadowBlur = 20;
-                ctx.shadowColor = "#ffffff";
-                ctx.beginPath();
-                ctx.arc(p.cx, p.cy, p.safeRadius, 0, Math.PI * 2);
-                ctx.stroke();
-
-                const numSpikes = 42;
-                ctx.fillStyle = "#880000";
-                ctx.strokeStyle = "#ff0000";
-                ctx.lineWidth = 2;
-
-                for (let s = 0; s < numSpikes; s++) {
-                    const angle = (s * Math.PI * 2) / numSpikes;
-                    const maxDist = Math.hypot(innerWidth, innerHeight);
-                    const tipX = p.cx + Math.cos(angle) * (p.safeRadius + (maxDist - p.safeRadius) * (1 - progress));
-                    const tipY = p.cy + Math.sin(angle) * (p.safeRadius + (maxDist - p.safeRadius) * (1 - progress));
-
-                    const outerX1 = p.cx + Math.cos(angle - 0.08) * maxDist;
-                    const outerY1 = p.cy + Math.sin(angle - 0.08) * maxDist;
-                    const outerX2 = p.cx + Math.cos(angle + 0.08) * maxDist;
-                    const outerY2 = p.cy + Math.sin(angle + 0.08) * maxDist;
-
+                for (let c = 0; c < p.columnCount; c++) {
+                    const cx = (c + 0.5) * spacing;
                     ctx.beginPath();
-                    ctx.moveTo(outerX1, outerY1);
-                    ctx.lineTo(tipX, tipY);
-                    ctx.lineTo(outerX2, outerY2);
+                    ctx.moveTo(cx, centerY - halfGap * pulse);
+                    ctx.lineTo(cx + diamondWidth * pulse, centerY);
+                    ctx.lineTo(cx, centerY + halfGap * pulse);
+                    ctx.lineTo(cx - diamondWidth * pulse, centerY);
                     ctx.closePath();
-                    ctx.fill();
                     ctx.stroke();
                 }
                 ctx.restore();
+            } else {
+                const maxSpikeHeight = centerY - 10;
+                const currentSpikeHeight = maxSpikeHeight * rise;
+                ctx.globalAlpha = 0.98;
+                ctx.fillStyle = "#800000";
+                ctx.strokeStyle = "#ff3333";
+                ctx.lineWidth = 2;
 
-                if (!isDying && !isDead) {
-                    const distToCenter = Math.hypot(playerX - p.cx, playerY - p.cy);
-                    if (distToCenter > p.safeRadius - playerHitRadius) {
-                        damagePlayer(10, time, 150);
+                for (let c = 0; c < p.columnCount; c++) {
+                    const cx = (c + 0.5) * spacing;
+                    const gapY = centerY;
+                    const topTipY = gapY - halfGap;
+                    const bottomTipY = gapY + halfGap;
+                    const leftX = c * spacing;
+                    const rightX = (c + 1) * spacing;
+                    const toothW = Math.min(spacing * 0.46, 42);
+
+                    // Ceiling spikes point downward, stopping at the top of each
+                    // diamond hole. Floor spikes point upward to the bottom of it.
+                    for (let side = 0; side < 2; side++) {
+                        const fromTop = side === 0;
+                        const edgeY = fromTop ? 0 : innerHeight;
+                        const tipY = fromTop
+                            ? topTipY + (centerY - halfGap - topTipY) * (1 - rise)
+                            : bottomTipY - (bottomTipY - centerY + halfGap) * (1 - rise);
+                        const baseY = fromTop ? currentSpikeHeight : innerHeight - currentSpikeHeight;
+
+                        // Use a row of narrow triangular teeth with the center gap
+                        // preserved as a diamond-shaped passage.
+                        const ySign = fromTop ? 1 : -1;
+                        ctx.beginPath();
+                        ctx.moveTo(leftX, edgeY);
+                        ctx.lineTo(rightX, edgeY);
+                        ctx.lineTo(cx + toothW, baseY);
+                        ctx.lineTo(cx, tipY);
+                        ctx.lineTo(cx - toothW, baseY);
+                        ctx.closePath();
+                        ctx.fill();
+                        ctx.stroke();
                     }
                 }
-            } else {
-                bossProjectiles.splice(i, 1);
-                continue;
+                ctx.restore();
+
+                if (!isDying && !isDead && rise > 0.05) {
+                    // Damage only when the player is outside a diamond hole.
+                    let inHole = false;
+                    for (let c = 0; c < p.columnCount; c++) {
+                        const cx = (c + 0.5) * spacing;
+                        const nx = Math.abs(playerX - cx) / diamondWidth;
+                        const ny = Math.abs(playerY - centerY) / halfGap;
+                        if (nx + ny <= 1) {
+                            inHole = true;
+                            break;
+                        }
+                    }
+                    if (!inHole && (playerY < currentSpikeHeight || playerY > innerHeight - currentSpikeHeight)) {
+                        damagePlayer(10, time);
+                    }
+                }
+
+                if (time >= p.attackEndTime) {
+                    bossProjectiles.splice(i, 1);
+                    continue;
+                }
             }
         }
         else if (p.type === "boomerang") {
@@ -3215,7 +3257,7 @@ function gameLoop(time) {
             }
         }
 
-        if (p.type !== "flame_circle" && p.type !== "feather" && p.type !== "edge_spike" && p.type !== "slam_strand_spike" && p.type !== "center_safe_spikes" && p.type !== "star_strand") {
+        if (p.type !== "flame_circle" && p.type !== "feather" && p.type !== "edge_spike" && p.type !== "slam_strand_spike" && p.type !== "floor_ceiling_diamond_spikes" && p.type !== "star_strand") {
             if (!isDying && !isDead) {
                 const dist = Math.hypot(playerX - p.x, playerY - p.y);
                 if (dist < p.hitRadius + playerHitRadius) {
