@@ -2483,7 +2483,7 @@ function gameLoop(time) {
                     const closestY = laserOriginY + proj * dy;
                     const dist = Math.hypot(playerX - closestX, playerY - closestY);
                     if (dist < 14 + playerHitRadius) {
-                        damagePlayer(1, time, 0);
+                        damagePlayer(2, time, 0);
                     }
                 }
             }
@@ -2670,7 +2670,7 @@ function gameLoop(time) {
         bgCtx.restore();
 
         if (!isDying && !isDead && Math.hypot(playerX - p.x, playerY - p.y) < p.hitRadius + playerHitRadius) {
-            damagePlayer(2, time, 0);
+            damagePlayer(4, time, 0);
             bgProjectiles.splice(i, 1);
             continue;
         }
@@ -2977,7 +2977,7 @@ function gameLoop(time) {
             if (!isDying && !isDead) {
                 const hitDist = Math.hypot(p.x - playerX, p.y - playerY);
                 if (hitDist < p.hitRadius + playerHitRadius) {
-                    damagePlayer(1, time, 0);
+                    damagePlayer(2, time, 0);
                 }
             }
         }
@@ -3024,7 +3024,7 @@ function gameLoop(time) {
             ctx.restore();
 
             if (!isDying && !isDead && Math.hypot(playerX - p.x, playerY - p.y) < p.hitRadius + playerHitRadius) {
-                damagePlayer(3, time, 0);
+                damagePlayer(6, time, 0);
             }
         }
         else if (p.type === "edge_spike") {
@@ -3202,9 +3202,9 @@ function gameLoop(time) {
                 const dist = Math.hypot(playerX - p.x, playerY - p.y);
                 if (dist < p.hitRadius + playerHitRadius) {
                     const damage =
-                        p.type === "boomerang" ? 4 :
-                        p.type === "orbit_spike" ? 5 :
-                        2;
+                        p.type === "boomerang" ? 8 :
+                        p.type === "orbit_spike" ? 10 :
+                        4;
                     damagePlayer(damage, time, 0);
                 }
             }
