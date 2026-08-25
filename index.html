@@ -499,7 +499,7 @@ img {
 
 <div class="win-overlay" id="win-overlay">
     <div class="win-title">VICTORY</div>
-    <div class="pause-subtitle">The Destroyer has been defeated!</div>
+    <div class="pause-subtitle">The Destroyer has been destroyed, but at what cost..</div>
     <button class="overlay-btn win-btn" onclick="restartGame()">PLAY AGAIN</button>
 </div>
 
@@ -1527,7 +1527,7 @@ function damagePlayer(amount, time) {
     setTimeout(() => { playerDot.classList.remove("hurt"); }, 200);
     
     updatePlayerHP();
-    if (playerHp <= 0) triggerDeath("Annihilated by The Destroyer.");
+    if (playerHp <= 0) triggerDeath("you got destroyed");
 }
 
 function updatePlayerHP() {
