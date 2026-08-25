@@ -483,7 +483,7 @@ img {
     <div class="player-hp-bar">
         <div class="player-hp-fill" id="player-hp-fill"></div>
     </div>
-    <div class="player-hp-text" id="player-hp-text">HP: 100 / 100</div>
+    <div class="player-hp-text" id="player-hp-text">HP: 75 / 75</div>
 </div>
 
 <div class="pause-overlay" id="pause-overlay">
@@ -650,7 +650,7 @@ let mobileAimY = 0;
 const mobileMove = { x: 0, y: 0 };
 const keys = { w:false, a:false, s:false, d:false, h:false, j:false, l:false };
 
-const maxPlayerHp = 100;
+const maxPlayerHp = 75;
 let playerHp = maxPlayerHp;
 let playerInvulnTime = 0;
 
@@ -717,6 +717,8 @@ let p2FlamethrowerNextShotTime = 0;
 
 let p2StarAttackUnlocked = false;
 let p2FeatherAttackUnlocked = false;
+let p2OverlapUnlocked = false;
+let p2OverlapNextTime = 0;
 let activeStarOutlines = [];
 let nextStarSpawnTime = 0;
 
@@ -1076,6 +1078,8 @@ function enterPhase2() {
     
     p2StarAttackUnlocked = false;
     p2FeatherAttackUnlocked = false;
+    p2OverlapUnlocked = false;
+    p2OverlapNextTime = 0;
     activeStarOutlines = [];
     featherAttackActive = false;
     wingAnimProgress = 0;
@@ -2149,6 +2153,10 @@ function gameLoop(time) {
         if (!p2FeatherAttackUnlocked && p2DmgDealt >= 300) {
             p2FeatherAttackUnlocked = true;
         }
+        if (!p2OverlapUnlocked && p2DmgDealt >= 700) {
+            p2OverlapUnlocked = true;
+            p2OverlapNextTime = time + 3500;
+        }
         if (!p2FlamethrowerUnlocked && p2DmgDealt >= 500) {
             p2FlamethrowerUnlocked = true;
         }
@@ -2226,7 +2234,12 @@ function gameLoop(time) {
             startDeathCutscene();
         }
 
-        if (p2StarAttackUnlocked && activeStarOutlines.length < 2 && time > nextStarSpawnTime) {
+        const p2StarCompatible = !featherAttackActive && (bossState === "IDLE" ||
+            bossState === "P2_LASER_PREP" || bossState === "P2_LASER_FIRE" ||
+            bossState === "P2_RAIN_FOUNTAIN" || bossState === "P2_RAIN_FALL" ||
+            bossState === "P2_HAND_BARRAGE" || bossState === "P2_FLAMETHROWER");
+        const p2StarMax = p2OverlapUnlocked ? 2 : 1;
+        if (p2StarAttackUnlocked && p2StarCompatible && activeStarOutlines.length < p2StarMax && time > nextStarSpawnTime) {
             const starRadius = (78 / 2) * scale;
 
             let sX = 150 + Math.random() * (innerWidth - 300);
@@ -2249,7 +2262,9 @@ function gameLoop(time) {
                 state: "fadeIn",
                 expanded: false
             });
-            nextStarSpawnTime = time + 3500 + Math.random() * 2000;
+            nextStarSpawnTime = p2OverlapUnlocked
+                ? time + 2400 + Math.random() * 1400
+                : time + 3500 + Math.random() * 2000;
         }
 
         const targetWingAnim = featherAttackActive ? 1 : 0;
@@ -2314,6 +2329,29 @@ function gameLoop(time) {
                 bossProjectiles.push({ type: "flame_circle", x: chestX, y: chestY, vx: Math.cos(a) * (8 + Math.random() * 3), vy: Math.sin(a) * (8 + Math.random() * 3), radius: 8, maxRadius: 38 + Math.random() * 18, growRate: 0.9, alpha: 1, color: "#ff0000", hitRadius: 8 });
             }
             nextEnragedBurstTime = time + 700;
+        }
+
+        // Late phase-2 overlap: add one controlled secondary pattern only to
+        // attacks with enough movement space. Never overlap it with the center
+        // spike or flamethrower patterns, where the safe routes are already tight.
+        if (p2OverlapUnlocked && !inP2Transition && !featherAttackActive && time > p2OverlapNextTime) {
+            const overlapCompatible =
+                bossState === "P2_LASER_PREP" || bossState === "P2_LASER_FIRE" ||
+                bossState === "P2_RAIN_FOUNTAIN" || bossState === "P2_RAIN_FALL" ||
+                bossState === "P2_HAND_BARRAGE";
+
+            if (overlapCompatible) {
+                featherAttackActive = true;
+                featherAttackEndTime = time + 2800;
+                nextFeatherSpawnTime = time;
+                p2OverlapNextTime = time + 6500;
+            } else if (bossState === "P2_CENTER_SPIKE" || bossState === "P2_FLAMETHROWER") {
+                // These patterns stay single-layered so their intended safe
+                // zones are never invalidated by a second movement pattern.
+                p2OverlapNextTime = time + 700;
+            } else {
+                p2OverlapNextTime = time + 300;
+            }
         }
 
         if (bossState === "IDLE" && !inP2Transition) {
