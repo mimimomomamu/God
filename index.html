@@ -411,159 +411,63 @@ img {
     box-shadow: 0 0 15px rgba(255,0,0,.5);
 }
 
-/* Mobile controls + mobile-only presentation */
-#mobile-toggle,
-#mobile-effects-toggle {
+/* Mobile controls */
+#mobile-toggle {
     position: fixed;
-    top: max(12px, env(safe-area-inset-top));
-    width: 42px;
-    height: 42px;
+    top: 14px;
+    right: 14px;
+    width: 38px;
+    height: 38px;
     z-index: 1000;
     border: 2px solid rgba(255,255,255,.65);
-    border-radius: 10px;
-    background: rgba(20,20,20,.78);
+    border-radius: 6px;
+    background: rgba(20,20,20,.75);
     color: #fff;
+    font-size: 18px;
     cursor: pointer;
     pointer-events: auto;
     touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
 }
-#mobile-toggle {
-    right: max(12px, env(safe-area-inset-right));
-    font-size: 19px;
-}
-#mobile-effects-toggle {
-    left: max(12px, env(safe-area-inset-left));
-    display: none;
-    font-size: 0;
-}
-#mobile-effects-toggle::before {
-    content: "";
-    position: absolute;
-    inset: 9px;
-    border: 2px solid rgba(255,255,255,.78);
-    border-radius: 50%;
-}
-#mobile-effects-toggle::after {
-    content: "";
-    position: absolute;
-    width: 2px;
-    height: 26px;
-    left: 18px;
-    top: 6px;
-    background: rgba(255,255,255,.9);
-    transform: rotate(45deg);
-    transform-origin: center;
-    border-radius: 2px;
-}
-#mobile-effects-toggle.off {
-    opacity: .65;
-    border-color: rgba(255,80,80,.7);
-}
-#mobile-effects-toggle.off::after { background: #ff4444; }
 #mobile-controls {
     position: fixed;
     inset: 0;
     z-index: 900;
     display: none;
     pointer-events: none;
-    touch-action: none;
 }
 #mobile-controls.active { display: block; }
 .mobile-joystick {
     position: absolute;
-    width: clamp(112px, 18vw, 154px);
-    height: clamp(112px, 18vw, 154px);
+    width: 150px;
+    height: 150px;
     border: 2px solid rgba(255,255,255,.32);
     border-radius: 50%;
     background: rgba(255,255,255,.06);
     pointer-events: auto;
     touch-action: none;
-    contain: layout paint;
 }
-#move-joystick {
-    left: max(18px, env(safe-area-inset-left));
-    bottom: max(18px, env(safe-area-inset-bottom));
-}
-#aim-joystick {
-    right: max(18px, env(safe-area-inset-right));
-    bottom: max(18px, env(safe-area-inset-bottom));
-}
+#move-joystick { left: 30px; bottom: 35px; }
+#aim-joystick { right: 30px; bottom: 35px; }
 .mobile-stick {
     position: absolute;
     left: 50%;
     top: 50%;
-    width: clamp(46px, 7vw, 60px);
-    height: clamp(46px, 7vw, 60px);
-    margin-left: clamp(-30px, -3.5vw, -23px);
-    margin-top: clamp(-30px, -3.5vw, -23px);
+    width: 58px;
+    height: 58px;
+    margin-left: -29px;
+    margin-top: -29px;
     border-radius: 50%;
     background: rgba(255,255,255,.28);
     border: 2px solid rgba(255,255,255,.65);
     box-shadow: 0 0 12px rgba(255,255,255,.18);
     pointer-events: none;
 }
-.mobile-rotate-hint {
-    display: none;
-    position: fixed;
-    inset: 0;
-    z-index: 1100;
-    align-items: center;
-    justify-content: center;
-    background: #000;
-    color: #fff;
-    font-size: clamp(16px, 3vw, 24px);
-    font-weight: 900;
-    letter-spacing: 1px;
-    text-align: center;
-    padding: 24px;
-    pointer-events: none;
-}
-.mobile-rotate-hint::before {
-    content: "↻";
-    display: block;
-    font-size: 58px;
-    margin-bottom: 12px;
-}
-@media (max-width: 900px) and (orientation: portrait) {
-    body.mobile-mode .mobile-rotate-hint { display: flex; flex-direction: column; }
-}
-body.mobile-mode {
-    overscroll-behavior: none;
-    touch-action: none;
-}
-body.mobile-mode .player-dot {
-    width: 10px;
-    height: 10px;
-    box-shadow: 0 0 7px #fff, 0 0 14px #fff;
-}
-body.mobile-mode .player-triangle {
-    left: 9px;
-    top: -4px;
-    border-top-width: 4px;
-    border-bottom-width: 4px;
-    border-left-width: 7px;
-    filter: drop-shadow(0 0 4px #fff) drop-shadow(0 0 7px #fff);
-}
-body.mobile-mode .player-hp-container {
-    left: max(14px, env(safe-area-inset-left));
-    bottom: max(14px, env(safe-area-inset-bottom));
-    width: min(180px, 34vw);
-}
-body.mobile-mode .boss-hp-container {
-    top: max(12px, env(safe-area-inset-top));
-    width: min(330px, 50vw);
-}
-body.mobile-mode .boss-hp-name { font-size: 13px; }
-body.mobile-mode .pause-title { font-size: clamp(32px, 7vw, 48px); }
 </style>
 </head>
 
 <body>
-<button id="mobile-toggle" aria-label="Toggle mobile mode" title="Mobile mode">☰</button>
-<button id="mobile-effects-toggle" aria-label="Toggle background effects" title="Toggle background effects"></button>
+<button id="mobile-toggle" aria-label="Toggle mobile mode">☰</button>
 <div id="mobile-controls">
-    <div class="mobile-rotate-hint" aria-hidden="true">Rotate your device to landscape</div>
     <div class="mobile-joystick" id="move-joystick"><div class="mobile-stick"></div></div>
     <div class="mobile-joystick" id="aim-joystick"><div class="mobile-stick"></div></div>
 </div>
@@ -719,15 +623,11 @@ let targetFloorSpikeHeight = 0;
 let meteorSpeedMultiplier = 1.0;
 
 const bgMeteorLines = [];
-const MOBILE_METEOR_LINES = 78;
-const NORMAL_METEOR_LINES = 45;
+const NUM_METEOR_LINES = 45;
 
 function initMeteorShower() {
     bgMeteorLines.length = 0;
-    const count = document.body.classList.contains("mobile-mode")
-        ? MOBILE_METEOR_LINES
-        : NORMAL_METEOR_LINES;
-    for (let i = 0; i < count; i++) {
+    for (let i = 0; i < NUM_METEOR_LINES; i++) {
         bgMeteorLines.push({
             x: Math.random() * innerWidth,
             y: Math.random() * innerHeight,
@@ -744,13 +644,10 @@ let mouseX = innerWidth / 2;
 let mouseY = innerHeight / 2;
 let isMouseDown = false;
 let mobileMode = false;
-let mobileEffectsEnabled = true;
 let mobileAimDown = false;
 let mobileAimX = 1;
 let mobileAimY = 0;
 const mobileMove = { x: 0, y: 0 };
-const MOBILE_ZOOM = 0.62;
-let canvasPixelRatio = 1;
 const keys = { w:false, a:false, s:false, d:false, h:false, j:false, l:false };
 
 const maxPlayerHp = 100;
@@ -849,34 +746,10 @@ const mobileControls = document.getElementById("mobile-controls");
 const moveJoystick = document.getElementById("move-joystick");
 const aimJoystick = document.getElementById("aim-joystick");
 
-const mobileEffectsToggle = document.getElementById("mobile-effects-toggle");
-
-function isMobileViewport() {
-    return mobileMode && (window.matchMedia("(pointer: coarse)").matches || innerWidth <= 900);
-}
-
-async function requestLandscape() {
-    try {
-        // Orientation locking is most reliable in fullscreen on mobile browsers.
-        if (document.documentElement.requestFullscreen && !document.fullscreenElement) {
-            try {
-                await document.documentElement.requestFullscreen({ navigationUI: "hide" });
-            } catch (_) {}
-        }
-        if (screen.orientation && screen.orientation.lock) {
-            try { await screen.orientation.lock("landscape"); } catch (_) {}
-        }
-        setTimeout(resizeCanvas, 120);
-    } catch (_) {}
-}
-
-function updateMobilePresentation() {
-    document.body.classList.toggle("mobile-mode", mobileMode);
+mobileToggle.addEventListener("click", () => {
+    mobileMode = !mobileMode;
     mobileControls.classList.toggle("active", mobileMode);
     mobileToggle.textContent = mobileMode ? "×" : "☰";
-    mobileEffectsToggle.style.display = mobileMode ? "block" : "none";
-    mobileEffectsToggle.classList.toggle("off", !mobileEffectsEnabled);
-
     if (!mobileMode) {
         mobileMove.x = 0;
         mobileMove.y = 0;
@@ -885,30 +758,7 @@ function updateMobilePresentation() {
         mobileAimY = 0;
         resetMobileStick(moveJoystick);
         resetMobileStick(aimJoystick);
-        if (screen.orientation && screen.orientation.unlock) {
-            try { screen.orientation.unlock(); } catch (_) {}
-        }
-        if (document.fullscreenElement && document.exitFullscreen) {
-            try { document.exitFullscreen(); } catch (_) {}
-        }
-    } else {
-        requestLandscape();
     }
-
-    initMeteorShower();
-    resizeCanvas();
-}
-
-mobileToggle.addEventListener("click", () => {
-    mobileMode = !mobileMode;
-    updateMobilePresentation();
-});
-
-mobileEffectsToggle.addEventListener("click", () => {
-    if (!mobileMode) return;
-    mobileEffectsEnabled = !mobileEffectsEnabled;
-    mobileEffectsToggle.classList.toggle("off", !mobileEffectsEnabled);
-    if (!mobileEffectsEnabled) bgCtx.clearRect(0, 0, innerWidth, innerHeight);
 });
 
 function setMobileStick(joystick, clientX, clientY) {
@@ -1072,10 +922,7 @@ window.addEventListener("keyup", (e) => {
 });
 
 function getDestroyerScale() {
-    const normalScale = (innerWidth / 704) * 0.82;
-    // Mobile-only zoom-out: the boss takes less of the landscape viewport,
-    // leaving a much larger, more playable dodge area.
-    return mobileMode ? normalScale * MOBILE_ZOOM : normalScale;
+    return (innerWidth / 704) * 0.82;
 }
 
 function getPhase2CenterPosition() {
@@ -1118,33 +965,13 @@ function positionDestroyerAtCenter() {
 }
 
 function resizeCanvas() {
-    const cssWidth = Math.max(1, Math.floor(innerWidth));
-    const cssHeight = Math.max(1, Math.floor(innerHeight));
-    canvasPixelRatio = mobileMode
-        ? Math.min(window.devicePixelRatio || 1, 1.75)
-        : 1;
-
-    canvas.width = Math.floor(cssWidth * canvasPixelRatio);
-    canvas.height = Math.floor(cssHeight * canvasPixelRatio);
-    bgCanvas.width = Math.floor(cssWidth * canvasPixelRatio);
-    bgCanvas.height = Math.floor(cssHeight * canvasPixelRatio);
-
-    canvas.style.width = cssWidth + "px";
-    canvas.style.height = cssHeight + "px";
-    bgCanvas.style.width = cssWidth + "px";
-    bgCanvas.style.height = cssHeight + "px";
-
-    // Keep all game math in CSS pixels while rendering mobile canvases
-    // at a sharper backing resolution.
-    ctx.setTransform(canvasPixelRatio, 0, 0, canvasPixelRatio, 0, 0);
-    bgCtx.setTransform(canvasPixelRatio, 0, 0, canvasPixelRatio, 0, 0);
+    canvas.width = innerWidth;
+    canvas.height = innerHeight;
+    bgCanvas.width = innerWidth;
+    bgCanvas.height = innerHeight;
     positionDestroyerAtCenter();
 }
 window.addEventListener("resize", resizeCanvas);
-window.addEventListener("orientationchange", () => setTimeout(resizeCanvas, 120));
-if (screen.orientation && screen.orientation.addEventListener) {
-    screen.orientation.addEventListener("change", () => setTimeout(resizeCanvas, 120));
-}
 
 function resetPhaseVisuals() {
     wingLeft.style.display = "none";
@@ -1436,7 +1263,7 @@ function updateWallClosingPhase(time) {
     const safeLeft = wallWidth + 8;
     const safeRight = innerWidth - wallWidth - 8;
     if (!isDead && !isWon && (playerX < safeLeft || playerX > safeRight)) {
-        damagePlayer(0.35, time);
+        damagePlayer(10, time, 150);
     }
 
     if (wallCloseProgress >= 1) {
@@ -1894,11 +1721,10 @@ function gameLoop(time) {
 
     checkPhase2SkipShortcut();
 
-    ctx.clearRect(0, 0, innerWidth, innerHeight);
-    bgCtx.clearRect(0, 0, innerWidth, innerHeight);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
     const scale = getDestroyerScale();
 
-    if (mobileEffectsEnabled || !mobileMode) {
     bgCtx.save();
     bgCtx.strokeStyle = "rgba(255, 255, 255, 0.4)";
     bgCtx.lineCap = "round";
@@ -1933,7 +1759,6 @@ function gameLoop(time) {
         bgCtx.stroke();
     }
     bgCtx.restore();
-    }
 
     if (inP2Transition && !isDying && !endingControlsLocked) {
         playerY = Math.min(innerHeight - 20, playerY + 2.6);
@@ -1943,11 +1768,8 @@ function gameLoop(time) {
     // the suction/death portion of the ending.
     if (!endingControlsLocked || endingState === "FOG_ROOM") {
         if (mobileMode) {
-            const moveLength = Math.hypot(mobileMove.x, mobileMove.y);
-            const moveScale = moveLength > 1 ? 1 / moveLength : 1;
-            const mobileSpeedBoost = isMobileViewport() ? 1.12 : 1;
-            playerX += mobileMove.x * moveScale * playerSpeed * mobileSpeedBoost;
-            playerY += mobileMove.y * moveScale * playerSpeed * mobileSpeedBoost;
+            playerX += mobileMove.x * playerSpeed;
+            playerY += mobileMove.y * playerSpeed;
             playerX = Math.max(20, Math.min(innerWidth - 20, playerX));
             playerY = Math.max(20, Math.min(innerHeight - 20, playerY));
         } else {
@@ -2623,7 +2445,7 @@ function gameLoop(time) {
                     const closestY = laserOriginY + proj * dy;
                     const dist = Math.hypot(playerX - closestX, playerY - closestY);
                     if (dist < 14 + playerHitRadius) {
-                        damagePlayer(18, time);
+                        damagePlayer(1, time, 0);
                     }
                 }
             }
@@ -2788,7 +2610,7 @@ function gameLoop(time) {
         ctx.restore();
 
         if (!isDying && !isDead && playerY >= innerHeight - floorSpikeHeight - playerHitRadius) {
-            damagePlayer(10, time);
+            damagePlayer(10, time, 150);
         }
     }
 
@@ -2810,7 +2632,7 @@ function gameLoop(time) {
         bgCtx.restore();
 
         if (!isDying && !isDead && Math.hypot(playerX - p.x, playerY - p.y) < p.hitRadius + playerHitRadius) {
-            damagePlayer(6, time);
+            damagePlayer(2, time, 0);
             bgProjectiles.splice(i, 1);
             continue;
         }
@@ -3003,7 +2825,7 @@ function gameLoop(time) {
                 if (!isDying && !isDead) {
                     const distToCenter = Math.hypot(playerX - p.cx, playerY - p.cy);
                     if (distToCenter > p.safeRadius - playerHitRadius) {
-                        damagePlayer(16, time);
+                        damagePlayer(10, time, 150);
                     }
                 }
             } else {
@@ -3117,7 +2939,7 @@ function gameLoop(time) {
             if (!isDying && !isDead) {
                 const hitDist = Math.hypot(p.x - playerX, p.y - playerY);
                 if (hitDist < p.hitRadius + playerHitRadius) {
-                    damagePlayer(3, time);
+                    damagePlayer(1, time, 0);
                 }
             }
         }
@@ -3164,7 +2986,7 @@ function gameLoop(time) {
             ctx.restore();
 
             if (!isDying && !isDead && Math.hypot(playerX - p.x, playerY - p.y) < p.hitRadius + playerHitRadius) {
-                damagePlayer(6, time);
+                damagePlayer(3, time, 0);
             }
         }
         else if (p.type === "edge_spike") {
@@ -3223,7 +3045,7 @@ function gameLoop(time) {
                     if (proj > 0 && proj < currentLen) {
                         const perpDistSq = (vx * vx + vy * vy) - (proj * proj);
                         if (perpDistSq >= 0 && perpDistSq < Math.pow(halfW + playerHitRadius, 2)) {
-                            damagePlayer(15, time);
+                            damagePlayer(10, time, 150);
                         }
                     }
                 }
@@ -3287,7 +3109,7 @@ function gameLoop(time) {
                     if (proj > 0 && proj < currentLen) {
                         const perpDistSq = (vx * vx + vy * vy) - (proj * proj);
                         if (perpDistSq >= 0 && perpDistSq < Math.pow(halfW * 0.8 + playerHitRadius, 2)) {
-                            damagePlayer(15, time);
+                            damagePlayer(10, time, 150);
                         }
                     }
                 }
@@ -3341,7 +3163,11 @@ function gameLoop(time) {
             if (!isDying && !isDead) {
                 const dist = Math.hypot(playerX - p.x, playerY - p.y);
                 if (dist < p.hitRadius + playerHitRadius) {
-                    damagePlayer(10, time);
+                    const damage =
+                        p.type === "boomerang" ? 4 :
+                        p.type === "orbit_spike" ? 5 :
+                        2;
+                    damagePlayer(damage, time, 0);
                 }
             }
         }
