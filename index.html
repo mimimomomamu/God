@@ -488,7 +488,7 @@ img {
 
 <div class="pause-overlay" id="pause-overlay">
     <div class="pause-title">PAUSED</div>
-    <div class="pause-subtitle">Press [P] to Resume | Press [H+J] to skip to Phase 2 | Press [H+L] to skip to the flying phase</div>
+    <div class="pause-subtitle">Press [P] to Resume</div>
 </div>
 
 <div class="death-overlay" id="death-overlay">
@@ -499,7 +499,7 @@ img {
 
 <div class="win-overlay" id="win-overlay">
     <div class="win-title">VICTORY</div>
-    <div class="pause-subtitle">The Destroyer has been defeated!</div>
+    <div class="pause-subtitle">the destroyer has been destroyed, but at what cost!</div>
     <button class="overlay-btn win-btn" onclick="restartGame()">PLAY AGAIN</button>
 </div>
 
@@ -1512,7 +1512,7 @@ function damagePlayer(amount, time) {
     setTimeout(() => { playerDot.classList.remove("hurt"); }, 200);
     
     updatePlayerHP();
-    if (playerHp <= 0) triggerDeath("Annihilated by The Destroyer.");
+    if (playerHp <= 0) triggerDeath("you got destroyed");
 }
 
 function updatePlayerHP() {
