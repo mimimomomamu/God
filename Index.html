@@ -1,0 +1,3300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Destroyer</title>
+
+<style>
+* {
+    box-sizing: border-box;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-user-drag: none;
+    font-family: "Arial Rounded MT Bold", "Arial Rounded", Arial, sans-serif;
+}
+
+html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #000;
+}
+
+img {
+    pointer-events: none;
+}
+
+.player-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 0;
+    height: 0;
+    z-index: 200;
+    pointer-events: none;
+}
+
+.player-dot {
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background: #fff;
+    box-shadow:
+        0 0 10px #fff,
+        0 0 20px #fff,
+        0 0 30px rgba(255,255,255,.6);
+    transition: background 0.1s, box-shadow 0.1s;
+}
+
+.player-dot.hurt {
+    background: #ff0000;
+    box-shadow: 0 0 20px #ff0000, 0 0 40px #ff0000;
+}
+
+.player-pointer {
+    position: absolute;
+    width: 0;
+    height: 0;
+    top: 0;
+    left: 0;
+}
+
+.player-triangle {
+    position: absolute;
+    left: 13px;
+    top: -5px;
+    width: 0;
+    height: 0;
+    border-top: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+    border-left: 9px solid #fff;
+    filter:
+        drop-shadow(0 0 6px #fff)
+        drop-shadow(0 0 10px #fff);
+}
+
+.player-hp-container {
+    position: absolute;
+    left: 25px;
+    bottom: 25px;
+    width: 200px;
+    z-index: 300;
+    pointer-events: none;
+}
+
+.player-hp-bar {
+    width: 100%;
+    height: 14px;
+    background: #1a0000;
+    border: 2px solid #800000;
+    border-radius: 9999px;
+    overflow: hidden;
+    box-shadow: 0 0 10px rgba(255,0,0,.3);
+}
+
+.player-hp-fill {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg,#cc0000,#ff3333);
+    box-shadow: 0 0 8px #ff0000;
+    border-radius: 9999px;
+    transition: width 0.1s ease-out;
+}
+
+.player-hp-text {
+    margin-top: 6px;
+    color: #fff;
+    font-size: 13px;
+    font-weight: bold;
+    letter-spacing: .8px;
+    text-shadow: 0 0 6px rgba(255,0,0,.8);
+}
+
+.boss-hp-container {
+    position: absolute;
+    top: 25px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 380px;
+    max-width: 80vw;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    z-index: 300;
+    pointer-events: none;
+}
+
+.boss-hp-bar {
+    width: 100%;
+    height: 15px;
+    background: #1f0000;
+    border: 1.5px solid rgba(255,40,40,.7);
+    border-radius: 9999px;
+    overflow: hidden;
+    box-shadow:
+        0 0 12px rgba(255,0,0,.55),
+        inset 0 0 6px rgba(0,0,0,.9);
+}
+
+.boss-hp-fill {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg,#990000,#ff1a1a);
+    box-shadow: 0 0 10px #ff0000;
+    border-radius: 9999px;
+    transition: width .12s ease-out;
+}
+
+.boss-hp-name {
+    margin-top: 6px;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 900;
+    letter-spacing: 1px;
+    text-shadow:
+        0 0 8px rgba(255,0,0,.9),
+        0 0 3px #000;
+    text-align: center;
+}
+
+.destroyer-layer {
+    position: absolute;
+    left: 50%;
+    top: 20px;
+    width: 704px;
+    height: 354px;
+    transform-origin: top center;
+    pointer-events: none;
+}
+
+#destroyer-scene-back { z-index: 120; }
+#destroyer-scene-front { z-index: 140; }
+
+.destroyer-layer img, .destroyer-layer div {
+    position: absolute;
+    display: block;
+}
+
+#wingbackgroundleft { 
+    left: 79px; top: 17px; width: 202px; height: 217px; z-index: 1; 
+    transform-origin: 90% 40%;
+    transition: transform 0.05s linear;
+}
+#wingbackgroundright { 
+    left: 399px; top: 17px; width: 202px; height: 217px; z-index: 1; 
+    transform-origin: 10% 40%;
+    transition: transform 0.05s linear;
+}
+#wingleft { 
+    left: 28px; top: 122px; width: 255px; height: 144px; z-index: 2; 
+    transform-origin: 90% 50%;
+    transition: transform 0.05s linear;
+}
+#rwingright { 
+    left: 399px; top: 122px; width: 255px; height: 144px; z-index: 2; 
+    transform-origin: 10% 50%;
+    transition: transform 0.05s linear;
+}
+#body2 { left: 305px; top: 176px; width: 78px; height: 75px; z-index: 4; }
+
+#handleft, #handright {
+    width: 40px; height: 48px; z-index: 3;
+    transition: left 0.7s linear, top 0.7s linear, transform 0.7s linear;
+}
+#handleft { left: 293px; top: 263px; }
+#handright { left: 355px; top: 263px; }
+
+#red-ball {
+    left: 344px;
+    top: 300px;
+    transform: translate(-50%, -50%);
+    width: 0px; 
+    height: 0px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #ff8888 0%, #ff0000 40%, #880000 100%);
+    box-shadow: 0 0 0px #ff0000;
+    transition: width 1s ease, height 1s ease, box-shadow 1s ease;
+    z-index: 3;
+}
+
+#red-ball.active {
+    width: 45px;
+    height: 45px;
+    box-shadow: 0 0 20px #ff0000, 0 0 40px #ff0000;
+}
+
+#red-ball.pulsing {
+    animation: redBallPulse 0.4s infinite alternate;
+}
+
+@keyframes redBallPulse {
+    from { transform: translate(-50%, -50%) scale(1); box-shadow: 0 0 20px #ff0000; }
+    to { transform: translate(-50%, -50%) scale(1.15); box-shadow: 0 0 35px #ff0000, 0 0 60px #ff0000; }
+}
+
+#pupil-container {
+    left: 0; top: 0; width: 100%; height: 100%; z-index: 5;
+}
+#pupil { 
+    left: 328px; top: 191.5px; width: 32px; height: 44px;
+    transform-origin: center center; 
+    will-change: transform;
+}
+#crown { left: 307px; top: 97px; width: 78px; height: 57px; z-index: 5; }
+
+@keyframes wingFlapInLeft {
+    0% { transform: scale(0.1) rotate(60deg); opacity: 0; }
+    70% { transform: scale(1.15) rotate(-10deg); opacity: 1; }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+@keyframes wingFlapInRight {
+    0% { transform: scale(0.1) rotate(-60deg); opacity: 0; }
+    70% { transform: scale(1.15) rotate(10deg); opacity: 1; }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+.wing-flap-left { animation: wingFlapInLeft 1s ease-out forwards; transform-origin: top right; }
+.wing-flap-right { animation: wingFlapInRight 1s ease-out forwards; transform-origin: top left; }
+
+.phase2-bob { animation: phase2BodyBob 3.9s ease-in-out infinite; }
+.phase2-crown-bob { animation: phase2CrownBob 3.1s ease-in-out infinite; }
+.phase2-hand-left-bob { animation: phase2HandLeftBob 2.8s ease-in-out infinite; }
+.phase2-hand-right-bob { animation: phase2HandRightBob 3.3s ease-in-out infinite; }
+.orb-hand-fast { transition: left .12s ease-out, top .12s ease-out, transform .12s ease-out !important; }
+.final-hand-travel { transition: left .9s linear !important; }
+.phase2-wing-left-bob { animation: phase2WingLeftBob 3.2s ease-in-out infinite; }
+.phase2-wing-right-bob { animation: phase2WingRightBob 3.6s ease-in-out infinite; }
+.phase2-back-left-bob { animation: phase2BackLeftBob 3.8s ease-in-out infinite; }
+.phase2-back-right-bob { animation: phase2BackRightBob 4.3s ease-in-out infinite; }
+
+.fast-wing-bob { animation-duration: 0.8s !important; }
+
+@keyframes phase2BodyBob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+@keyframes phase2CrownBob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+@keyframes phase2HandLeftBob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+@keyframes phase2HandRightBob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+@keyframes phase2WingLeftBob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+@keyframes phase2WingRightBob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+@keyframes phase2BackLeftBob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+@keyframes phase2BackRightBob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+
+#bg-canvas, #game-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+}
+#bg-canvas { z-index: 110; }
+#game-canvas { z-index: 130; }
+
+
+/* Final ending cinematic */
+#ending-fog {
+    position: absolute;
+    inset: 0;
+    z-index: 390;
+    pointer-events: none;
+    opacity: 0;
+    background:
+        radial-gradient(circle at 50% 52%, rgba(40,40,40,.16) 0%, rgba(8,8,8,.72) 48%, rgba(0,0,0,.98) 100%),
+        repeating-radial-gradient(ellipse at 50% 55%, rgba(80,80,80,.035) 0 18px, rgba(0,0,0,.04) 19px 42px);
+    filter: blur(1px);
+    transition: opacity 1.2s ease;
+}
+#ending-fog.active { opacity: 1; }
+#ending-fade {
+    position: absolute;
+    inset: 0;
+    z-index: 800;
+    background: #000;
+    opacity: 0;
+    pointer-events: none;
+}
+#ending-fade.active { opacity: 1; }
+.final-suck {
+    transition: transform .1s linear !important;
+}
+.final-player-big .player-dot {
+    width: 88px;
+    height: 88px;
+    box-shadow: 0 0 25px #fff, 0 0 55px rgba(255,255,255,.55);
+}
+
+.screen-shake { animation: screenShake .65s ease-out; }
+
+@keyframes screenShake {
+    0%   { transform: translate(0,0); }
+    10%  { transform: translate(-10px,6px); }
+    20%  { transform: translate(9px,-7px); }
+    30%  { transform: translate(-8px,-5px); }
+    40%  { transform: translate(8px,7px); }
+    50%  { transform: translate(-6px,4px); }
+    60%  { transform: translate(5px,-4px); }
+    70%  { transform: translate(-3px,3px); }
+    80%  { transform: translate(3px,-2px); }
+    90%  { transform: translate(-1px,1px); }
+    100% { transform: translate(0,0); }
+}
+
+.pause-overlay, .death-overlay, .win-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: #fff;
+    pointer-events: none;
+    opacity: 0;
+    z-index: 400;
+    transition: opacity .25s ease;
+}
+
+.pause-overlay { background: rgba(0,0,0,.75); backdrop-filter: blur(4px); }
+.death-overlay { background: rgba(15,0,0,.85); backdrop-filter: blur(6px); }
+.win-overlay { background: rgba(0,20,30,.85); backdrop-filter: blur(6px); }
+
+.pause-overlay.active, .death-overlay.active, .win-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.pause-title {
+    font-size: 48px;
+    letter-spacing: 4px;
+    text-shadow: 0 0 20px #ff0000, 0 0 40px #ff0000;
+    margin-bottom: 10px;
+}
+
+.pause-subtitle { font-size: 18px; color: #ffa0a0; letter-spacing: 1px; }
+
+.death-title {
+    font-size: 52px;
+    color: #ff3333;
+    letter-spacing: 4px;
+    text-shadow: 0 0 25px #f00, 0 0 50px #900;
+}
+
+.win-title {
+    font-size: 56px;
+    color: #ff3333;
+    letter-spacing: 5px;
+    text-shadow: 0 0 25px #cc0000, 0 0 50px #ff0000;
+}
+
+.overlay-btn {
+    margin-top: 25px;
+    padding: 12px 32px;
+    font-size: 18px;
+    font-weight: bold;
+    color: #fff;
+    border-radius: 20px;
+    cursor: pointer;
+    pointer-events: auto;
+}
+
+.death-btn {
+    background: linear-gradient(135deg,#cc0000,#880000);
+    border: 2px solid #ff4444;
+    box-shadow: 0 0 15px rgba(255,0,0,.5);
+}
+
+.win-btn {
+    background: linear-gradient(135deg,#cc0000,#660000);
+    border: 2px solid #ff3333;
+    box-shadow: 0 0 15px rgba(255,0,0,.5);
+}
+
+/* Mobile controls */
+#mobile-toggle {
+    position: fixed;
+    top: 14px;
+    right: 14px;
+    width: 38px;
+    height: 38px;
+    z-index: 1000;
+    border: 2px solid rgba(255,255,255,.65);
+    border-radius: 6px;
+    background: rgba(20,20,20,.75);
+    color: #fff;
+    font-size: 18px;
+    cursor: pointer;
+    pointer-events: auto;
+    touch-action: manipulation;
+}
+#mobile-controls {
+    position: fixed;
+    inset: 0;
+    z-index: 900;
+    display: none;
+    pointer-events: none;
+}
+#mobile-controls.active { display: block; }
+.mobile-joystick {
+    position: absolute;
+    width: 150px;
+    height: 150px;
+    border: 2px solid rgba(255,255,255,.32);
+    border-radius: 50%;
+    background: rgba(255,255,255,.06);
+    pointer-events: auto;
+    touch-action: none;
+}
+#move-joystick { left: 30px; bottom: 35px; }
+#aim-joystick { right: 30px; bottom: 35px; }
+.mobile-stick {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 58px;
+    height: 58px;
+    margin-left: -29px;
+    margin-top: -29px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.28);
+    border: 2px solid rgba(255,255,255,.65);
+    box-shadow: 0 0 12px rgba(255,255,255,.18);
+    pointer-events: none;
+}
+</style>
+</head>
+
+<body>
+<button id="mobile-toggle" aria-label="Toggle mobile mode">☰</button>
+<div id="mobile-controls">
+    <div class="mobile-joystick" id="move-joystick"><div class="mobile-stick"></div></div>
+    <div class="mobile-joystick" id="aim-joystick"><div class="mobile-stick"></div></div>
+</div>
+
+<div class="boss-hp-container">
+    <div class="boss-hp-bar">
+        <div class="boss-hp-fill" id="boss-hp-fill"></div>
+    </div>
+    <div class="boss-hp-name">The Destroyer</div>
+</div>
+
+<div class="player-hp-container">
+    <div class="player-hp-bar">
+        <div class="player-hp-fill" id="player-hp-fill"></div>
+    </div>
+    <div class="player-hp-text" id="player-hp-text">HP: 100 / 100</div>
+</div>
+
+<div class="pause-overlay" id="pause-overlay">
+    <div class="pause-title">PAUSED</div>
+    <div class="pause-subtitle">Press [P] to Resume | Press [H+J] to skip to Phase 2 | Press [H+L] to skip to the flying phase</div>
+</div>
+
+<div class="death-overlay" id="death-overlay">
+    <div class="death-title">YOU DIED</div>
+    <div class="pause-subtitle" id="death-message"></div>
+    <button class="overlay-btn death-btn" onclick="restartGame()">RESPAWN</button>
+</div>
+
+<div class="win-overlay" id="win-overlay">
+    <div class="win-title">VICTORY</div>
+    <div class="pause-subtitle">The Destroyer has been defeated!</div>
+    <button class="overlay-btn win-btn" onclick="restartGame()">PLAY AGAIN</button>
+</div>
+
+<div id="ending-fog"></div>
+<div id="ending-fade"></div>
+
+<audio id="bg-music" src="music.mp3" loop preload="auto"></audio>
+
+<canvas id="bg-canvas"></canvas>
+
+<div id="destroyer-scene-back" class="destroyer-layer">
+    <img id="wingbackgroundleft" src="wingbackgroundleft.png" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'202\' height=\'217\' viewBox=\'0 0 202 217\'><path d=\'M180 180 Q100 20 10 120 Q90 190 180 180 Z\' fill=\'%23660000\' stroke=\'%23ff0000\' stroke-width=\'3\'/></svg>'" alt="">
+    <img id="wingbackgroundright" src="wingbackgrounright.png" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'202\' height=\'217\' viewBox=\'0 0 202 217\'><path d=\'M22 180 Q102 20 192 120 Q112 190 22 180 Z\' fill=\'%23660000\' stroke=\'%23ff0000\' stroke-width=\'3\'/></svg>'" alt="">
+    
+    <img id="wingleft" src="wingleft.png" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'255\' height=\'144\' viewBox=\'0 0 255 144\'><path d=\'M230 70 Q120 0 10 70 Q120 140 230 70 Z\' fill=\'%23990000\' stroke=\'%23ff3333\' stroke-width=\'3\'/></svg>'" alt="">
+    <img id="rwingright" src="rwingright.png" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'255\' height=\'144\' viewBox=\'0 0 255 144\'><path d=\'M25 70 Q135 0 245 70 Q135 140 25 70 Z\' fill=\'%23990000\' stroke=\'%23ff3333\' stroke-width=\'3\'/></svg>'" alt="">
+    
+    <div id="red-ball"></div>
+
+    <img id="handleft" src="handleft.png" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'40\' height=\'48\' viewBox=\'0 0 40 48\'><path d=\'M5 10 L35 10 L30 40 L10 40 Z\' fill=\'%23cc0000\' stroke=\'%23ff6666\' stroke-width=\'2\'/></svg>'" alt="">
+    <img id="handright" src="handright.png" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'40\' height=\'48\' viewBox=\'0 0 40 48\'><path d=\'M5 10 L35 10 L30 40 L10 40 Z\' fill=\'%23cc0000\' stroke=\'%23ff6666\' stroke-width=\'2\'/></svg>'" alt="">
+    
+    <img id="body2" src="body2.png" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'78\' height=\'75\' viewBox=\'0 0 78 75\'><ellipse cx=\'39\' cy=\'37\' rx=\'35\' ry=\'33\' fill=\'%23440000\' stroke=\'%23ff0000\' stroke-width=\'4\'/></svg>'" alt="The Destroyer">
+</div>
+
+<canvas id="game-canvas"></canvas>
+
+<div id="destroyer-scene-front" class="destroyer-layer">
+    <div id="pupil-container">
+        <img id="pupil" src="pupil2.png" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'32\' height=\'44\' viewBox=\'0 0 32 44\'><ellipse cx=\'16\' cy=\'22\' rx=\'14\' ry=\'20\' fill=\'%23ff0000\' stroke=\'%23ffffff\' stroke-width=\'3\'/></svg>'" alt="">
+    </div>
+    <img id="crown" src="crown.png" onerror="this.onerror=null; this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' width=\'78\' height=\'57\' viewBox=\'0 0 78 57\'><polygon points=\'10,50 20,10 39,30 58,10 68,50\' fill=\'%23ff1a1a\' stroke=\'%23ffffff\' stroke-width=\'2\'/></svg>'" alt="">
+</div>
+
+<div class="player-container" id="player">
+    <div class="player-dot" id="player-dot"></div>
+    <div class="player-pointer" id="player-pointer">
+        <div class="player-triangle"></div>
+    </div>
+</div>
+
+<script>
+const canvas = document.getElementById("game-canvas");
+const ctx = canvas.getContext("2d");
+
+const bgCanvas = document.getElementById("bg-canvas");
+const bgCtx = bgCanvas.getContext("2d");
+
+const playerEl = document.getElementById("player");
+const playerDot = document.getElementById("player-dot");
+const playerPointer = document.getElementById("player-pointer");
+const playerHpFill = document.getElementById("player-hp-fill");
+const playerHpText = document.getElementById("player-hp-text");
+const bossHpFill = document.getElementById("boss-hp-fill");
+const pauseOverlay = document.getElementById("pause-overlay");
+const deathOverlay = document.getElementById("death-overlay");
+const winOverlay = document.getElementById("win-overlay");
+const deathMessage = document.getElementById("death-message");
+const bgMusic = document.getElementById("bg-music");
+
+const sceneBack = document.getElementById("destroyer-scene-back");
+const sceneFront = document.getElementById("destroyer-scene-front");
+
+const body = document.getElementById("body2");
+const pupil = document.getElementById("pupil");
+const leftHand = document.getElementById("handleft");
+const rightHand = document.getElementById("handright");
+const crown = document.getElementById("crown");
+const wingLeft = document.getElementById("wingleft");
+const wingRight = document.getElementById("rwingright");
+const backWingLeft = document.getElementById("wingbackgroundleft");
+const backWingRight = document.getElementById("wingbackgroundright");
+const redBall = document.getElementById("red-ball");
+const playerHpContainer = document.querySelector(".player-hp-container");
+const bossHpContainer = document.querySelector(".boss-hp-container");
+const endingFog = document.getElementById("ending-fog");
+const endingFade = document.getElementById("ending-fade");
+
+let isPaused = false;
+let isDead = false;
+let isWon = false;
+let isDying = false; 
+let postFlyPhase = false;
+let deathEyeTarget = null;
+let flySkipTriggered = false;
+let phase = 1;
+let phaseTransitioning = false;
+let phase2HpStart = 0;
+let phase2HandAttackUnlocked = false;
+let p2FlamethrowerUnlocked = false;
+
+let p2CenterSpikeUnlocked = false;
+let p2TransitionTriggered = false;
+let inP2Transition = false;
+let p2TransitionDamageDealt = 0;
+let p2TransitionEnded = false;
+let p2TransitionEndTime = 0;
+let transitionNextFlameTime = 0;
+let p2Enraged = false;
+let p2EnragedStartTime = 0;
+let nextEnragedBurstTime = 0;
+let wallClosingActive = false;
+let wallClosingStartTime = 0;
+let wallCloseProgress = 0;
+let wallCloseSpeed = 0.00011;
+let wallHandGrabStarted = false;
+let wallReleaseActive = false;
+let wallReleaseStartTime = 0;
+let wallReleaseProgress = 0;
+let endingState = "NONE";
+let endingStateStartTime = 0;
+let endingControlsLocked = false;
+let endingUiSuckStarted = false;
+let endingPlayerSuckStarted = false;
+let endingExplosionTriggered = false;
+let endingFogStarted = false;
+let endingDiagonalLines = false;
+let endingFadeProgress = 0;
+let floorSpikeHeight = 0;
+let targetFloorSpikeHeight = 0;
+let meteorSpeedMultiplier = 1.0;
+
+const bgMeteorLines = [];
+const NUM_METEOR_LINES = 45;
+
+function initMeteorShower() {
+    bgMeteorLines.length = 0;
+    for (let i = 0; i < NUM_METEOR_LINES; i++) {
+        bgMeteorLines.push({
+            x: Math.random() * innerWidth,
+            y: Math.random() * innerHeight,
+            length: 25 + Math.random() * 45,
+            speed: 0.8 + Math.random() * 1.2,
+            alpha: 0.12 + Math.random() * 0.28,
+            width: 1 + Math.random() * 1.5
+        });
+    }
+}
+initMeteorShower();
+
+let mouseX = innerWidth / 2;
+let mouseY = innerHeight / 2;
+let isMouseDown = false;
+let mobileMode = false;
+let mobileAimDown = false;
+let mobileAimX = 1;
+let mobileAimY = 0;
+const mobileMove = { x: 0, y: 0 };
+const keys = { w:false, a:false, s:false, d:false, h:false, j:false, l:false };
+
+const maxPlayerHp = 100;
+let playerHp = maxPlayerHp;
+let playerInvulnTime = 0;
+
+const maxBossHp = 2000;
+let bossHp = maxBossHp;
+
+let playerX = innerWidth / 2;
+let playerY = innerHeight * .75;
+const playerHitRadius = 6;
+const playerSpeed = 5;
+const shootInterval = 100;
+let lastShootTime = 0;
+
+const playerBullets = [];
+const particles = [];
+let fallingParts = []; 
+const bossProjectiles = [];
+const bgProjectiles = [];
+
+let destroyerX = 0;
+let destroyerY = 0;
+let bossBaseX = 0;
+let bossBaseY = 0;
+let bossTargetX = 0;
+let bossTargetY = 0;
+
+let bossState = "IDLE";
+let nextAttackTime = 0;
+let stateTimer = 0;
+let pupilPulseScale = 1;
+
+let bossLastShootTime = 0;
+let lastAttackType = 0;
+let bossExtraScale = 1;
+let spiralActive = false;
+let spiralEndTime = 0;
+let spiralNextSpawnTime = 0;
+let spiralAngle = 0;
+let spiralCenterX = 0;
+let spiralCenterY = 0;
+
+let hasDoneSpikeAttack = false;
+let spikeWaveCount = 0;
+
+let handSlamActive = false;
+let handSlamPhase = "IDLE";
+let handSlamTimer = 0;
+let nextHandSlamTime = 0;
+
+let orbAttackVariant = "SCATTER"; 
+let orbStreamAngle = 0;
+
+let laserSweepDir = 1; 
+let laserCurrentAngle = 0;
+let laserTargetAngle = 0;
+let rainSpawnEndTime = 0;
+let rainNextDropTime = 0;
+
+let p2HandBarrageEndTime = 0;
+let p2HandBarrageNextShotTime = 0;
+
+let p2FlamethrowerEndTime = 0;
+let p2FlamethrowerNextShotTime = 0;
+
+let p2StarAttackUnlocked = false;
+let p2FeatherAttackUnlocked = false;
+let activeStarOutlines = [];
+let nextStarSpawnTime = 0;
+
+let featherAttackActive = false;
+let featherAttackEndTime = 0;
+let nextFeatherSpawnTime = 0;
+let wingAnimProgress = 0;
+
+let currentEyeX = 0;
+let currentEyeY = 0;
+
+window.addEventListener("mousemove", (e) => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+});
+
+window.addEventListener("mousedown", (e) => {
+    if(e.button === 0) isMouseDown = true;
+});
+
+window.addEventListener("mouseup", (e) => {
+    if(e.button === 0) isMouseDown = false;
+});
+
+const mobileToggle = document.getElementById("mobile-toggle");
+const mobileControls = document.getElementById("mobile-controls");
+const moveJoystick = document.getElementById("move-joystick");
+const aimJoystick = document.getElementById("aim-joystick");
+
+mobileToggle.addEventListener("click", () => {
+    mobileMode = !mobileMode;
+    mobileControls.classList.toggle("active", mobileMode);
+    mobileToggle.textContent = mobileMode ? "×" : "☰";
+    if (!mobileMode) {
+        mobileMove.x = 0;
+        mobileMove.y = 0;
+        mobileAimDown = false;
+        mobileAimX = 1;
+        mobileAimY = 0;
+        resetMobileStick(moveJoystick);
+        resetMobileStick(aimJoystick);
+    }
+});
+
+function setMobileStick(joystick, clientX, clientY) {
+    const rect = joystick.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    const max = rect.width * 0.32;
+    let dx = clientX - cx;
+    let dy = clientY - cy;
+    const dist = Math.hypot(dx, dy);
+    if (dist > max) {
+        dx = dx / dist * max;
+        dy = dy / dist * max;
+    }
+    const stick = joystick.querySelector(".mobile-stick");
+    stick.style.transform = `translate(${dx}px, ${dy}px)`;
+    return { x: dx / max, y: dy / max };
+}
+
+function resetMobileStick(joystick) {
+    joystick.querySelector(".mobile-stick").style.transform = "translate(0px, 0px)";
+}
+
+function setupMoveJoystick() {
+    let activeId = null;
+    moveJoystick.addEventListener("pointerdown", e => {
+        if (!mobileMode) return;
+        activeId = e.pointerId;
+        moveJoystick.setPointerCapture(activeId);
+        const v = setMobileStick(moveJoystick, e.clientX, e.clientY);
+        mobileMove.x = v.x;
+        mobileMove.y = v.y;
+        e.preventDefault();
+    });
+    moveJoystick.addEventListener("pointermove", e => {
+        if (e.pointerId !== activeId) return;
+        const v = setMobileStick(moveJoystick, e.clientX, e.clientY);
+        mobileMove.x = v.x;
+        mobileMove.y = v.y;
+        e.preventDefault();
+    });
+    const end = e => {
+        if (e.pointerId !== activeId) return;
+        activeId = null;
+        mobileMove.x = 0;
+        mobileMove.y = 0;
+        resetMobileStick(moveJoystick);
+    };
+    moveJoystick.addEventListener("pointerup", end);
+    moveJoystick.addEventListener("pointercancel", end);
+}
+
+function setupAimJoystick() {
+    let activeId = null;
+    aimJoystick.addEventListener("pointerdown", e => {
+        if (!mobileMode) return;
+        activeId = e.pointerId;
+        aimJoystick.setPointerCapture(activeId);
+        const v = setMobileStick(aimJoystick, e.clientX, e.clientY);
+        if (Math.hypot(v.x, v.y) > 0.12) {
+            mobileAimX = v.x;
+            mobileAimY = v.y;
+        }
+        mobileAimDown = true;
+        e.preventDefault();
+    });
+    aimJoystick.addEventListener("pointermove", e => {
+        if (e.pointerId !== activeId) return;
+        const v = setMobileStick(aimJoystick, e.clientX, e.clientY);
+        if (Math.hypot(v.x, v.y) > 0.12) {
+            const len = Math.hypot(v.x, v.y);
+            mobileAimX = v.x / len;
+            mobileAimY = v.y / len;
+        }
+        e.preventDefault();
+    });
+    const end = e => {
+        if (e.pointerId !== activeId) return;
+        activeId = null;
+        mobileAimDown = false;
+        resetMobileStick(aimJoystick);
+    };
+    aimJoystick.addEventListener("pointerup", end);
+    aimJoystick.addEventListener("pointercancel", end);
+}
+
+setupMoveJoystick();
+setupAimJoystick();
+
+function triggerP2Transition(time) {
+    if (p2TransitionTriggered || phase !== 2 || isDying || postFlyPhase) return;
+
+    p2TransitionTriggered = true;
+    inP2Transition = true;
+    p2TransitionDamageDealt = 0;
+    bossState = "P2_TRANSITION";
+    targetFloorSpikeHeight = 45;
+    meteorSpeedMultiplier = 6.0;
+
+    wingLeft.classList.add("fast-wing-bob");
+    wingRight.classList.add("fast-wing-bob");
+    backWingLeft.classList.add("fast-wing-bob");
+    backWingRight.classList.add("fast-wing-bob");
+
+    transitionNextFlameTime = time + 1200;
+}
+
+function checkPhase2SkipShortcut() {
+    if (keys.h && keys.j && phase === 1 && !phaseTransitioning && !isDying && !postFlyPhase) {
+        bossHp = Math.min(bossHp, maxBossHp * 0.66);
+        updateBossHP();
+        enterPhase2();
+    }
+
+    // H + L skips directly to the very-late flying/falling phase.
+    // It depletes the boss HP all the way to the normal 100 HP trigger point.
+    if (keys.h && keys.l && !flySkipTriggered && !isDying && !postFlyPhase) {
+        flySkipTriggered = true;
+
+        const startFlyingPhase = () => {
+            if (phase === 1) {
+                bossHp = Math.min(bossHp, maxBossHp * 0.66);
+                updateBossHP();
+                enterPhase2();
+            }
+
+            // H+L jumps directly to the new flying phase trigger.
+            // Establish phase 2 first, then place the boss at exactly 90 HP
+            // and start the same flying sequence used by the natural trigger.
+            bossHp = 90;
+            phase2HpStart = bossHp;
+            updateBossHP();
+            triggerP2Transition(performance.now());
+        };
+
+        if (phase === 1) {
+            setTimeout(startFlyingPhase, 1200);
+        } else {
+            startFlyingPhase();
+        }
+    }
+}
+
+
+window.addEventListener("keydown", (e) => {
+    const k = e.key.toLowerCase();
+    if(keys.hasOwnProperty(k)) keys[k] = true;
+    
+    checkPhase2SkipShortcut();
+
+    if(k === 'p' && !isDead && !isWon) {
+        isPaused = !isPaused;
+        pauseOverlay.classList.toggle("active", isPaused);
+    }
+});
+
+window.addEventListener("keyup", (e) => {
+    const k = e.key.toLowerCase();
+    if(keys.hasOwnProperty(k)) keys[k] = false;
+    if(k === "h" || k === "l") flySkipTriggered = false;
+});
+
+function getDestroyerScale() {
+    return (innerWidth / 704) * 0.82;
+}
+
+function getPhase2CenterPosition() {
+    const scale = getDestroyerScale();
+    const bodyCenterLocalX = 305 + 78 / 2;
+    const transformOriginX = 704 / 2;
+    const targetBodyCenterX = innerWidth / 2;
+    const targetBodyCenterY = innerHeight * 0.28;
+    const bodyCenterLocalY = 176 + 75 / 2;
+    return {
+        x: targetBodyCenterX - transformOriginX - (bodyCenterLocalX - transformOriginX) * scale,
+        y: targetBodyCenterY - bodyCenterLocalY * scale
+    };
+}
+
+function updateSceneTransforms() {
+    const scale = getDestroyerScale() * bossExtraScale;
+    const transformStr = `scale(${scale})`;
+    
+    sceneBack.style.transform = transformStr;
+    sceneFront.style.transform = transformStr;
+    
+    sceneBack.style.left = destroyerX + "px";
+    sceneBack.style.top = destroyerY + "px";
+    
+    sceneFront.style.left = destroyerX + "px";
+    sceneFront.style.top = destroyerY + "px";
+}
+
+function positionDestroyerAtCenter() {
+    const center = getPhase2CenterPosition();
+    bossBaseX = center.x;
+    bossBaseY = center.y;
+    
+    if (bossState === "IDLE") {
+        destroyerX = bossBaseX;
+        destroyerY = bossBaseY;
+    }
+    updateSceneTransforms();
+}
+
+function resizeCanvas() {
+    canvas.width = innerWidth;
+    canvas.height = innerHeight;
+    bgCanvas.width = innerWidth;
+    bgCanvas.height = innerHeight;
+    positionDestroyerAtCenter();
+}
+window.addEventListener("resize", resizeCanvas);
+
+function resetPhaseVisuals() {
+    wingLeft.style.display = "none";
+    wingRight.style.display = "none";
+    backWingLeft.style.display = "none";
+    backWingRight.style.display = "none";
+    crown.style.display = "none";
+
+    const parts = [body, pupil, leftHand, rightHand, wingLeft, wingRight, backWingLeft, backWingRight, crown];
+    parts.forEach(p => p.className = "");
+
+    parts.forEach(p => {
+        p.style.transform = "";
+        p.style.filter = "";
+        p.style.opacity = "1";
+    });
+    
+    sceneBack.style.opacity = "1";
+    sceneFront.style.opacity = "1";
+    
+    wingLeft.style.left = "28px"; wingLeft.style.top = "122px"; wingLeft.style.transform = ""; wingLeft.style.transformOrigin = "90% 50%";
+    wingRight.style.left = "399px"; wingRight.style.top = "122px"; wingRight.style.transform = ""; wingRight.style.transformOrigin = "10% 50%";
+    backWingLeft.style.left = "79px"; backWingLeft.style.top = "17px"; backWingLeft.style.transform = ""; backWingLeft.style.transformOrigin = "90% 40%";
+    backWingRight.style.left = "399px"; backWingRight.style.top = "17px"; backWingRight.style.transform = ""; backWingRight.style.transformOrigin = "10% 40%";
+    
+    crown.style.left = "307px"; crown.style.top = "97px";
+    leftHand.style.left = "293px"; leftHand.style.top = "263px";
+    rightHand.style.left = "355px"; rightHand.style.top = "263px";
+    body.style.left = "305px"; body.style.top = "176px";
+    pupil.style.left = "328px"; pupil.style.top = "191.5px";
+
+    body.classList.add("phase2-bob");
+    leftHand.classList.add("phase2-hand-left-bob");
+    rightHand.classList.add("phase2-hand-right-bob");
+}
+
+function enterPhase2() {
+    if (phase !== 1 || phaseTransitioning || isDying || postFlyPhase) return;
+    phaseTransitioning = true;
+    
+    handSlamActive = false;
+    handSlamPhase = "IDLE";
+
+    wingLeft.style.display = "block";
+    wingRight.style.display = "block";
+    backWingLeft.style.display = "block";
+    backWingRight.style.display = "block";
+    crown.style.display = "block";
+
+    wingLeft.classList.add("wing-flap-left");
+    backWingLeft.classList.add("wing-flap-left");
+    wingRight.classList.add("wing-flap-right");
+    backWingRight.classList.add("wing-flap-right");
+    crown.classList.add("phase2-crown-bob");
+
+    setTimeout(() => {
+        wingLeft.classList.remove("wing-flap-left");
+        backWingLeft.classList.remove("wing-flap-left");
+        wingRight.classList.remove("wing-flap-right");
+        backWingRight.classList.remove("wing-flap-right");
+
+        wingLeft.classList.add("phase2-wing-left-bob");
+        wingRight.classList.add("phase2-wing-right-bob");
+        backWingLeft.classList.add("phase2-back-left-bob");
+        backWingRight.classList.add("phase2-back-right-bob");
+    }, 1000);
+
+    spawnTransformationExplosion(305 + 39, 176 + 37);
+
+    document.body.classList.remove("screen-shake");
+    void document.body.offsetWidth;
+    document.body.classList.add("screen-shake");
+    
+    bossState = "IDLE";
+    nextAttackTime = performance.now() + 2000;
+    redBall.className = "";
+    leftHand.classList.remove("orb-hand-fast", "final-hand-travel");
+    rightHand.classList.remove("orb-hand-fast", "final-hand-travel");
+    leftHand.style.transform = "";
+    rightHand.style.transform = "";
+    leftHand.style.left = "293px";
+    leftHand.style.top = "263px";
+    rightHand.style.left = "355px";
+    rightHand.style.top = "263px";
+
+    setTimeout(() => { document.body.classList.remove("screen-shake"); }, 700);
+
+    phase = 2;
+    phase2HpStart = bossHp;
+    phase2HandAttackUnlocked = false;
+    p2FlamethrowerUnlocked = false;
+    p2CenterSpikeUnlocked = false;
+    p2TransitionTriggered = false;
+    inP2Transition = false;
+    p2TransitionDamageDealt = 0;
+    p2TransitionEnded = false;
+    p2Enraged = false;
+    p2EnragedStartTime = 0;
+    floorSpikeHeight = 0;
+    targetFloorSpikeHeight = 0;
+    meteorSpeedMultiplier = 1.0;
+    
+    p2StarAttackUnlocked = false;
+    p2FeatherAttackUnlocked = false;
+    activeStarOutlines = [];
+    featherAttackActive = false;
+    wingAnimProgress = 0;
+    postFlyPhase = false;
+    deathEyeTarget = null;
+    phaseTransitioning = false;
+}
+
+function resetHandsToNormal() {
+    leftHand.style.left = "293px";
+    leftHand.style.top = "263px";
+    leftHand.style.transform = "";
+    rightHand.style.left = "355px";
+    rightHand.style.top = "263px";
+    rightHand.style.transform = "";
+}
+
+function spawnTransformationExplosion(lx, ly, intensity = 130, colorMode = "red") {
+    const scale = getDestroyerScale();
+    const globalX = destroyerX + 352 + (lx - 352) * scale;
+    const globalY = destroyerY + ly * scale;
+
+    for (let i = 0; i < intensity; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 1.5 + Math.random() * 8;
+        
+        let color = Math.random() > 0.5 ? '#ff0033' : '#cc0000';
+        if(colorMode === "dark") color = Math.random() > 0.5 ? '#440000' : '#110000';
+        
+        particles.push({
+            x: globalX, y: globalY,
+            vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+            alpha: 1, decay: .012 + Math.random() * .018,
+            size: 2 + Math.random() * 5, color: color
+        });
+    }
+}
+
+let deathStep = 0;
+let nextDeathTime = 0;
+let deathCutsceneFinished = false;
+const deathSequence = [
+    { el: backWingLeft, lx: 79 + 101, ly: 17 + 108 },
+    { el: backWingRight, lx: 399 + 101, ly: 17 + 108 },
+    { el: wingLeft, lx: 28 + 127, ly: 122 + 72 },
+    { el: wingRight, lx: 399 + 127, ly: 122 + 72 },
+    { el: crown, lx: 307 + 39, ly: 97 + 28 }
+];
+
+function startDeathCutscene() {
+    if (isDying || postFlyPhase) return;
+    // Keep the hands untouched through the breaking phase. They are sent
+    // off-screen when the final spike walls begin closing.
+    wallClosingActive = false;
+    wallReleaseActive = false;
+    wallClosingStartTime = 0;
+    wallCloseProgress = 0;
+    wallHandGrabStarted = false;
+    isDying = true;
+    deathCutsceneFinished = false;
+    deathEyeTarget = null;
+    deathStep = 0;
+    nextDeathTime = performance.now() + 1000;
+    
+    playerBullets.length = 0;
+    bossProjectiles.length = 0;
+    bgProjectiles.length = 0;
+    
+    redBall.className = "";
+    bossState = "IDLE";
+}
+
+function processDeathCutscene(time) {
+    if (!isDying) return;
+    
+    if (time > nextDeathTime && deathStep < deathSequence.length) {
+        let stage = deathSequence[deathStep];
+        deathEyeTarget = stage.el;
+        spawnTransformationExplosion(stage.lx, stage.ly, 50, "dark");
+        
+        stage.el.className = "";
+        stage.el.style.filter = "brightness(0.5) contrast(1.1)";
+        stage.el.style.transform = "rotate(-20deg)";
+        
+        setTimeout(() => {
+            if (!isDying) return;
+            fallingParts.push({
+                el: stage.el,
+                y: parseFloat(stage.el.style.top) || 0,
+                x: parseFloat(stage.el.style.left) || 0,
+                vy: -3, vr: (Math.random() - 0.5) * 8, rot: -20
+            });
+            deathEyeTarget = stage.el;
+        }, 300);
+
+        deathStep++;
+        nextDeathTime = time + 1400; 
+    } 
+    else if (time > nextDeathTime && deathStep === deathSequence.length) {
+        spawnTransformationExplosion(305 + 39, 176 + 37, 80, "dark"); 
+        
+        document.body.classList.remove("screen-shake");
+        void document.body.offsetWidth;
+        document.body.classList.add("screen-shake");
+        
+        deathStep++;
+        nextDeathTime = time + 2500; 
+    }
+    else if (time > nextDeathTime && deathStep > deathSequence.length && fallingParts.length === 0 && !wallClosingActive) {
+        // The wings/body have finished falling. Briefly restore the normal hand pose,
+        // then begin the final wall-closing sequence instead of winning immediately.
+        wallClosingActive = true;
+        wallReleaseActive = false;
+        deathEyeTarget = null;
+        wallClosingStartTime = time;
+        wallCloseProgress = 0;
+        wallHandGrabStarted = false;
+        nextDeathTime = time + 500;
+    }
+}
+
+function updateWallClosingPhase(time) {
+    if (!wallClosingActive) return;
+
+    const elapsed = time - wallClosingStartTime;
+
+    // Deliberately slow final wall closing: the player gets more time to finish the boss.
+    wallCloseProgress = Math.min(1, Math.max(0, (elapsed - 350) / 5200));
+
+    // The red walls close in from both sides. The first small spikes appear immediately.
+    const wallWidth = 24 + wallCloseProgress * (innerWidth * 0.46);
+
+    // During the final phase the hands leave the screen and stay there.
+    // They do not follow the wall edges or return until the boss is killed.
+    if (elapsed >= 350 && !wallReleaseActive) {
+        wallHandGrabStarted = true;
+        // Both hands travel horizontally in perfectly straight, opposite directions.
+        // Keep the same Y coordinate and clear any previous attack rotation.
+        leftHand.classList.add("final-hand-travel");
+        rightHand.classList.add("final-hand-travel");
+        leftHand.style.transform = "";
+        rightHand.style.transform = "";
+        leftHand.style.top = "263px";
+        rightHand.style.top = "263px";
+        // Hands live inside the 704px boss scene, so move them past the
+        // scene edges rather than using viewport coordinates.
+        leftHand.style.left = "-90px";
+        rightHand.style.left = "754px";
+    }
+    const spikeCount = 10;
+    if (!wallReleaseActive) {
+        ctx.save();
+        ctx.globalAlpha = 0.9;
+        ctx.fillStyle = "#800000";
+        ctx.strokeStyle = "#ff3333";
+        ctx.lineWidth = 3;
+        ctx.fillRect(0, 0, wallWidth, innerHeight);
+        ctx.strokeRect(0, 0, wallWidth, innerHeight);
+        ctx.fillRect(innerWidth - wallWidth, 0, wallWidth, innerHeight);
+        ctx.strokeRect(innerWidth - wallWidth, 0, wallWidth, innerHeight);
+
+        ctx.fillStyle = "#ff3333";
+        for (let i = 0; i < spikeCount; i++) {
+            const y = (i + 0.5) * innerHeight / spikeCount;
+            const spikeDepth = 28 + wallCloseProgress * 35;
+
+            ctx.beginPath();
+            ctx.moveTo(wallWidth, y - 13);
+            ctx.lineTo(wallWidth + spikeDepth, y);
+            ctx.lineTo(wallWidth, y + 13);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.moveTo(innerWidth - wallWidth, y - 13);
+            ctx.lineTo(innerWidth - wallWidth - spikeDepth, y);
+            ctx.lineTo(innerWidth - wallWidth, y + 13);
+            ctx.closePath();
+            ctx.fill();
+        }
+        ctx.restore();
+    }
+    // Being caught by the closing walls damages the player heavily, but the boss
+    // remains vulnerable throughout the sequence.
+    const safeLeft = wallWidth + 8;
+    const safeRight = innerWidth - wallWidth - 8;
+    if (!isDead && !isWon && (playerX < safeLeft || playerX > safeRight)) {
+        damagePlayer(0.35, time);
+    }
+
+    if (wallCloseProgress >= 1) {
+        // Keep the walls closed and give the player a final window to finish the boss.
+        wallCloseProgress = 1;
+    }
+
+    // Once the boss reaches 0 HP, rapidly retract the spike walls and then
+    // remove them completely. Only after that do the hands return home.
+    if (bossHp <= 0 && !wallReleaseActive) {
+        wallReleaseActive = true;
+        wallReleaseStartTime = time;
+        endingState = "BOSS_EXPLOSION_WAIT";
+        endingStateStartTime = time;
+        bossHp = 0;
+        updateBossHP();
+    }
+
+    if (wallReleaseActive) {
+        // Fast outward release: the spike walls physically travel off-screen
+        // instead of simply shrinking away.
+        const releaseProgress = Math.min(1, (time - wallReleaseStartTime) / 520);
+        wallReleaseProgress = releaseProgress;
+        wallCloseProgress = 1;
+
+        const retreatDistance = releaseProgress * (innerWidth * 1.25);
+        const releaseWallWidth = 24 + innerWidth * 0.46;
+        ctx.save();
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = "#800000";
+        ctx.strokeStyle = "#ff3333";
+        ctx.lineWidth = 3;
+        // Re-use the exact walls already on screen and translate those same
+        // walls outward. This prevents a second set of walls from appearing.
+        const leftWallX = -retreatDistance;
+        const rightWallX = innerWidth - releaseWallWidth + retreatDistance;
+        ctx.fillRect(leftWallX, 0, releaseWallWidth, innerHeight);
+        ctx.strokeRect(leftWallX, 0, releaseWallWidth, innerHeight);
+        ctx.fillRect(rightWallX, 0, releaseWallWidth, innerHeight);
+        ctx.strokeRect(rightWallX, 0, releaseWallWidth, innerHeight);
+        ctx.fillStyle = "#ff3333";
+        for (let i = 0; i < spikeCount; i++) {
+            const y = (i + 0.5) * innerHeight / spikeCount;
+            const spikeDepth = 60;
+            ctx.beginPath();
+            ctx.moveTo(leftWallX + releaseWallWidth, y - 13);
+            ctx.lineTo(leftWallX + releaseWallWidth + spikeDepth, y);
+            ctx.lineTo(leftWallX + releaseWallWidth, y + 13);
+            ctx.closePath(); ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(rightWallX, y - 13);
+            ctx.lineTo(rightWallX - spikeDepth, y);
+            ctx.lineTo(rightWallX, y + 13);
+            ctx.closePath(); ctx.fill();
+        }
+        ctx.restore();
+
+        if (releaseProgress >= 1) {
+            wallClosingActive = false;
+            wallReleaseActive = false;
+            wallCloseProgress = 0;
+            wallHandGrabStarted = false;
+            resetHandsToNormal();
+            setTimeout(() => {
+                leftHand.classList.remove("final-hand-travel");
+                rightHand.classList.remove("final-hand-travel");
+            }, 950);
+            finishDeathCutscene();
+        }
+    }
+}
+
+function finishDeathCutscene() {
+    if (deathCutsceneFinished) return;
+    deathCutsceneFinished = true;
+    isDying = false;
+    postFlyPhase = true;
+    deathEyeTarget = null;
+    fallingParts.length = 0;
+    resetPhaseVisuals();
+    resetHandsToNormal();
+    bossState = "POST_FLY";
+    nextAttackTime = Infinity;
+    pupilPulseScale = 1;
+    currentEyeX = 0;
+    currentEyeY = 0;
+
+    // The hands/walls are finished first. One second later the actual boss
+    // explosion begins, which starts the longer end-of-game cinematic.
+    if (!endingExplosionTriggered) {
+        endingState = "BOSS_EXPLOSION_WAIT";
+        if (!endingStateStartTime) endingStateStartTime = performance.now();
+    }
+    endingControlsLocked = true;
+    endingExplosionTriggered = false;
+}
+
+function beginEndingExplosion(time) {
+    if (endingExplosionTriggered) return;
+    endingExplosionTriggered = true;
+    endingState = "EXPLOSION";
+    endingStateStartTime = time;
+    spawnTransformationExplosion(344, 213, 520, "red");
+    spawnTransformationExplosion(344, 213, 280, "dark");
+    document.body.classList.remove("screen-shake");
+    void document.body.offsetWidth;
+    document.body.classList.add("screen-shake");
+    sceneBack.style.display = "none";
+    sceneFront.style.display = "none";
+    floorSpikeHeight = 0;
+    targetFloorSpikeHeight = 0;
+    bossHp = 0;
+    updateBossHP();
+}
+
+function processEndingCinematic(time) {
+    if (endingState === "NONE") return;
+
+    if (endingState === "BOSS_EXPLOSION_WAIT") {
+        if (time - endingStateStartTime >= 1000) beginEndingExplosion(time);
+        return;
+    }
+
+    if (endingState === "EXPLOSION") {
+        // Give the explosion a few seconds to play before the player loses control.
+        if (time - endingStateStartTime >= 4000) {
+            endingState = "SUCTION_PREP";
+            endingStateStartTime = time;
+            endingControlsLocked = true;
+            endingDiagonalLines = true;
+            endingUiSuckStarted = false;
+            endingPlayerSuckStarted = false;
+        }
+        return;
+    }
+
+    if (endingState === "SUCTION_PREP") {
+        // Very slow downward pull while the background accelerates down-right.
+        playerY = Math.min(innerHeight - 20, playerY + 0.18);
+        // UI begins shaking toward down-right before the actual suction.
+        const shakeT = Math.min(1, (time - endingStateStartTime) / 900);
+        const shakeX = (3 + shakeT * 8) * Math.sin(time * 0.045);
+        const shakeY = (3 + shakeT * 8) * Math.sin(time * 0.052);
+        const shakeRot = (1 + shakeT * 3) * Math.sin(time * 0.06);
+        playerHpContainer.style.transform = `translate(${shakeX}px, ${shakeY}px) rotate(${shakeRot}deg)`;
+        bossHpContainer.style.transform = `translate(calc(-50% + ${shakeX}px), ${shakeY}px) rotate(${shakeRot}deg)`;
+        if (time - endingStateStartTime >= 1300) {
+            endingState = "UI_SUCK";
+            endingStateStartTime = time;
+            endingUiSuckStarted = true;
+        }
+        return;
+    }
+
+    if (endingState === "UI_SUCK") {
+        const t = Math.min(1, (time - endingStateStartTime) / 1500);
+        const distance = 2200 * t * t;
+        const spin = 1080 * t;
+        const tr = `translate(${distance}px, ${distance}px) rotate(${spin}deg)`;
+        playerHpContainer.style.transform = tr;
+        bossHpContainer.style.transform = `translate(calc(-50% + ${distance}px), ${distance}px) rotate(${spin}deg)`;
+        playerHpContainer.classList.add("final-suck");
+        bossHpContainer.classList.add("final-suck");
+        if (t >= 1) {
+            playerHpContainer.style.opacity = "0";
+            bossHpContainer.style.opacity = "0";
+            endingState = "PLAYER_SUCK";
+            endingStateStartTime = time;
+            endingPlayerSuckStarted = true;
+        }
+        return;
+    }
+
+    if (endingState === "PLAYER_SUCK") {
+        const t = Math.min(1, (time - endingStateStartTime) / 1100);
+        const distance = 2600 * t * t;
+        const spin = 1440 * t;
+        playerEl.classList.remove("final-player-big");
+        playerEl.style.transform = `translate(${playerX + distance}px, ${playerY + distance}px) rotate(${spin}deg)`;
+        playerEl.style.opacity = String(1 - t * .15);
+        if (t >= 1) {
+            playerEl.style.opacity = "0";
+            endingState = "FADE_TO_BLACK";
+            endingStateStartTime = time;
+            endingFadeProgress = 0;
+        }
+        return;
+    }
+
+    if (endingState === "FADE_TO_BLACK") {
+        const t = Math.min(1, (time - endingStateStartTime) / 1400);
+        endingFade.style.opacity = String(t);
+        if (t >= 1) {
+            endingState = "BLACK_HOLD";
+            endingStateStartTime = time;
+            endingFade.style.opacity = "1";
+            endingFog.classList.add("active");
+            sceneBack.style.display = "none";
+            sceneFront.style.display = "none";
+            canvas.style.display = "none";
+            bgCanvas.style.display = "none";
+            playerHpContainer.style.display = "none";
+            bossHpContainer.style.display = "none";
+            playerEl.classList.add("final-player-big");
+            playerEl.style.opacity = "1";
+            playerEl.style.transform = `translate(${innerWidth/2}px, ${innerHeight/2}px)`;
+        }
+        return;
+    }
+
+    if (endingState === "BLACK_HOLD") {
+        // Hold on pure black for a few seconds before revealing the fog room.
+        endingFade.style.opacity = "1";
+        if (time - endingStateStartTime >= 2800) {
+            endingState = "FOG_ROOM";
+            endingStateStartTime = time;
+            endingFogStarted = true;
+            endingFade.style.transition = "opacity 2.2s ease-in-out";
+            endingFade.style.opacity = "0";
+        }
+        return;
+    }
+
+    if (endingState === "FOG_ROOM") {
+        // Movement is allowed in the fog room, but shooting remains disabled.
+        // The player keeps the enlarged visual and the shooting triangle, but
+        // the firing code is locked by endingControlsLocked.
+        if (time - endingStateStartTime >= 6200) {
+            endingState = "WIN";
+            triggerWin();
+        }
+    }
+}
+
+function damagePlayer(amount, time) {
+    if (isDying || isWon || isDead || time < playerInvulnTime) return;
+    
+    playerHp -= amount;
+    playerInvulnTime = time + 500;
+    
+    playerDot.classList.add("hurt");
+    setTimeout(() => { playerDot.classList.remove("hurt"); }, 200);
+    
+    updatePlayerHP();
+    if (playerHp <= 0) triggerDeath("Annihilated by The Destroyer.");
+}
+
+function updatePlayerHP() {
+    const pct = Math.max(0, playerHp / maxPlayerHp * 100);
+    playerHpFill.style.width = pct + "%";
+    playerHpText.textContent = `HP: ${Math.ceil(playerHp)} / ${maxPlayerHp}`;
+}
+
+function updateBossHP() {
+    bossHpFill.style.width = Math.max(0, bossHp / maxBossHp * 100) + "%";
+}
+
+function triggerDeath(reason = "") {
+    if (isDead || isWon) return;
+    isDead = true;
+    isMouseDown = false;
+    for(let k in keys) keys[k] = false;
+    deathMessage.textContent = reason;
+    deathOverlay.classList.add("active");
+}
+
+function triggerWin() {
+    if (isWon || isDead) return;
+    isWon = true;
+    isMouseDown = false;
+    winOverlay.classList.add("active");
+}
+
+function restartGame() {
+    isPaused = false;
+    isDead = false;
+    isWon = false;
+    isDying = false;
+    postFlyPhase = false;
+    deathEyeTarget = null;
+    deathCutsceneFinished = false;
+    flySkipTriggered = false;
+    p2Enraged = false;
+    p2EnragedStartTime = 0;
+    nextEnragedBurstTime = 0;
+    wallClosingActive = false;
+    wallClosingStartTime = 0;
+    wallCloseProgress = 0;
+    wallHandGrabStarted = false;
+    wallReleaseActive = false;
+    wallReleaseStartTime = 0;
+    wallReleaseProgress = 0;
+    endingState = "NONE";
+    endingStateStartTime = 0;
+    endingControlsLocked = false;
+    endingUiSuckStarted = false;
+    endingPlayerSuckStarted = false;
+    endingExplosionTriggered = false;
+    endingFogStarted = false;
+    endingDiagonalLines = false;
+    endingFadeProgress = 0;
+    phase = 1;
+    phaseTransitioning = false;
+    phase2HpStart = 0;
+    phase2HandAttackUnlocked = false;
+    p2FlamethrowerUnlocked = false;
+    p2CenterSpikeUnlocked = false;
+    p2TransitionTriggered = false;
+    inP2Transition = false;
+    p2TransitionDamageDealt = 0;
+    p2TransitionEnded = false;
+    floorSpikeHeight = 0;
+    targetFloorSpikeHeight = 0;
+    meteorSpeedMultiplier = 1.0;
+    
+    for(let k in keys) keys[k] = false;
+    isMouseDown = false;
+    mobileAimDown = false;
+    mobileMove.x = 0;
+    mobileMove.y = 0;
+    resetMobileStick(moveJoystick);
+    resetMobileStick(aimJoystick);
+
+    playerHp = maxPlayerHp;
+    bossHp = maxBossHp;
+    playerX = innerWidth / 2;
+    playerY = innerHeight * .75;
+    playerBullets.length = 0;
+    particles.length = 0;
+    fallingParts = [];
+    bossProjectiles.length = 0;
+    bgProjectiles.length = 0;
+    
+    bossState = "IDLE";
+    nextAttackTime = performance.now() + 2000;
+    currentEyeX = 0;
+    currentEyeY = 0;
+    pupilPulseScale = 1;
+
+    bossLastShootTime = 0;
+    lastAttackType = 0;
+    bossExtraScale = 1;
+    spiralActive = false;
+    hasDoneSpikeAttack = false;
+    spikeWaveCount = 0;
+
+    handSlamActive = false;
+    handSlamPhase = "IDLE";
+    handSlamTimer = 0;
+    nextHandSlamTime = 0;
+    
+    redBall.className = "";
+    leftHand.style.transform = "";
+    rightHand.style.transform = "";
+
+    resetPhaseVisuals();
+    positionDestroyerAtCenter();
+    resizeCanvas();
+    initMeteorShower();
+
+    deathMessage.textContent = "";
+    deathOverlay.classList.remove("active");
+    winOverlay.classList.remove("active");
+    endingFog.classList.remove("active");
+    endingFade.style.opacity = "0";
+    endingFade.style.transition = "opacity 1.2s ease";
+    playerEl.classList.remove("final-player-big");
+    playerEl.style.opacity = "1";
+    playerHpContainer.style.display = "";
+    bossHpContainer.style.display = "";
+    playerHpContainer.style.opacity = "1";
+    bossHpContainer.style.opacity = "1";
+    playerHpContainer.style.transform = "";
+    bossHpContainer.style.transform = "translateX(-50%)";
+    playerHpContainer.classList.remove("final-suck");
+    bossHpContainer.classList.remove("final-suck");
+    canvas.style.display = "";
+    bgCanvas.style.display = "";
+    sceneBack.style.display = "";
+    sceneFront.style.display = "";
+    pauseOverlay.classList.remove("active");
+
+    updatePlayerHP();
+    updateBossHP();
+    startBackgroundMusic();
+}
+
+bgMusic.volume = .22;
+function startBackgroundMusic() {
+    if (bgMusic.paused) bgMusic.play().catch(() => {});
+}
+window.addEventListener("mousedown", startBackgroundMusic, { once:true });
+window.addEventListener("keydown", startBackgroundMusic, { once:true });
+
+function spawnEdgeSpikeWave(time) {
+    const numSpikes = 8 + Math.floor(Math.random() * 6);
+    const diagAngles = [
+        0, Math.PI / 2, Math.PI, Math.PI * 1.5,
+        Math.PI / 4, Math.PI * 3 / 4, Math.PI * 5 / 4, Math.PI * 7 / 4
+    ];
+
+    for (let i = 0; i < numSpikes; i++) {
+        const isDiagonal = Math.random() < 0.6;
+        let angle, startX, startY;
+
+        if (isDiagonal) {
+            const baseAngle = diagAngles[4 + Math.floor(Math.random() * 4)];
+            angle = baseAngle + (Math.random() - 0.5) * 0.35;
+
+            if (Math.cos(angle) > 0) startX = -60;
+            else startX = innerWidth + 60;
+            if (Math.sin(angle) > 0) startY = -60;
+            else startY = innerHeight + 60;
+
+            if (Math.random() < 0.5) startX = Math.random() * innerWidth;
+            else startY = Math.random() * innerHeight;
+        } else {
+            const edge = ["top", "bottom", "left", "right"][Math.floor(Math.random() * 4)];
+            if (edge === "top") {
+                startX = Math.random() * innerWidth;
+                startY = -60;
+                angle = Math.PI / 2 + (Math.random() - 0.5) * 0.4;
+            } else if (edge === "bottom") {
+                startX = Math.random() * innerWidth;
+                startY = innerHeight + 60;
+                angle = -Math.PI / 2 + (Math.random() - 0.5) * 0.4;
+            } else if (edge === "left") {
+                startX = -60;
+                startY = Math.random() * innerHeight;
+                angle = 0 + (Math.random() - 0.5) * 0.4;
+            } else {
+                startX = innerWidth + 60;
+                startY = Math.random() * innerHeight;
+                angle = Math.PI + (Math.random() - 0.5) * 0.4;
+            }
+        }
+        
+        bossProjectiles.push({
+            type: "edge_spike",
+            x: startX,
+            y: startY,
+            angle: angle,
+            width: 32,
+            length: Math.hypot(innerWidth, innerHeight) * 1.25,
+            triggerTime: time + 700 + Math.random() * 400,
+            endTime: time + 1600,
+            state: "warning"
+        });
+    }
+}
+
+function gameLoop(time) {
+    requestAnimationFrame(gameLoop);
+    if (isPaused || isDead || isWon) return;
+
+    checkPhase2SkipShortcut();
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
+    const scale = getDestroyerScale();
+
+    bgCtx.save();
+    bgCtx.strokeStyle = "rgba(255, 255, 255, 0.4)";
+    bgCtx.lineCap = "round";
+    for (let i = 0; i < bgMeteorLines.length; i++) {
+        let line = bgMeteorLines[i];
+        if (endingDiagonalLines) {
+            const speed = 10 + line.speed * 7;
+            line.x += speed;
+            line.y += speed;
+            if (line.x - line.length > innerWidth || line.y - line.length > innerHeight) {
+                line.x = -Math.random() * 300;
+                line.y = -Math.random() * 300;
+            }
+        } else {
+            line.y -= line.speed * meteorSpeedMultiplier;
+            if (line.y + line.length < 0) {
+                line.y = innerHeight + Math.random() * 40;
+                line.x = Math.random() * innerWidth;
+            }
+        }
+
+        bgCtx.lineWidth = line.width;
+        bgCtx.strokeStyle = `rgba(255, 255, 255, ${line.alpha})`;
+        bgCtx.beginPath();
+        if (endingDiagonalLines) {
+            bgCtx.moveTo(line.x, line.y);
+            bgCtx.lineTo(line.x - line.length * .75, line.y - line.length * .75);
+        } else {
+            bgCtx.moveTo(line.x, line.y);
+            bgCtx.lineTo(line.x, line.y + line.length);
+        }
+        bgCtx.stroke();
+    }
+    bgCtx.restore();
+
+    if (inP2Transition && !isDying && !endingControlsLocked) {
+        playerY = Math.min(innerHeight - 20, playerY + 2.6);
+    }
+
+    // Normal controls remain active in the fog room, but are disabled during
+    // the suction/death portion of the ending.
+    if (!endingControlsLocked || endingState === "FOG_ROOM") {
+        if (mobileMode) {
+            playerX += mobileMove.x * playerSpeed;
+            playerY += mobileMove.y * playerSpeed;
+            playerX = Math.max(20, Math.min(innerWidth - 20, playerX));
+            playerY = Math.max(20, Math.min(innerHeight - 20, playerY));
+        } else {
+            if (keys.w && playerY > 20) playerY -= playerSpeed;
+            if (keys.s && playerY < innerHeight - 20) playerY += playerSpeed;
+            if (keys.a && playerX > 20) playerX -= playerSpeed;
+            if (keys.d && playerX < innerWidth - 20) playerX += playerSpeed;
+        }
+    }
+
+    playerEl.style.transform = `translate(${playerX}px, ${playerY}px)`;
+    
+    let angleToMouse;
+    if (mobileMode && mobileAimDown) {
+        angleToMouse = Math.atan2(mobileAimY, mobileAimX);
+    } else if (mobileMode) {
+        angleToMouse = Math.atan2(mobileAimY, mobileAimX);
+    } else {
+        angleToMouse = Math.atan2(mouseY - playerY, mouseX - playerX);
+    }
+    playerPointer.style.transform = `rotate(${angleToMouse}rad)`;
+
+    const mobileShoot = mobileMode && mobileAimDown;
+    if ((isMouseDown || mobileShoot) && !endingControlsLocked && (!isDying || wallClosingActive) && time > lastShootTime + shootInterval) {
+        playerBullets.push({
+            x: playerX, y: playerY,
+            vx: Math.cos(angleToMouse) * 15,
+            vy: Math.sin(angleToMouse) * 15
+        });
+        lastShootTime = time;
+    }
+
+    positionDestroyerAtCenter();
+
+    if (!isDying && phase === 1) {
+        if (bossState === "IDLE") {
+            destroyerX += (bossBaseX - destroyerX) * 0.05;
+            destroyerY += (bossBaseY - destroyerY) * 0.05;
+
+            if (!hasDoneSpikeAttack && bossHp <= 1900) {
+                hasDoneSpikeAttack = true;
+                bossState = "ATTACK4_LEAVE";
+                bossTargetY = -1200;
+            }
+            else if (time > nextAttackTime) {
+                let possibleAttacks = [1, 2];
+                if (bossHp <= 1800) {
+                    possibleAttacks.push(3, 5);
+                }
+                
+                if (possibleAttacks.length > 1) {
+                    possibleAttacks = possibleAttacks.filter(a => a !== lastAttackType);
+                }
+                
+                const chosen = possibleAttacks[Math.floor(Math.random() * possibleAttacks.length)];
+                lastAttackType = chosen;
+
+                if (chosen === 1) {
+                    bossState = "ATTACK1_MOVE";
+                    const bossHalfWidth = 352 * scale;
+                    const minX = 100 - bossHalfWidth;
+                    const maxX = innerWidth - 100 - bossHalfWidth; 
+                    bossTargetX = Math.max(minX, Math.min(maxX, playerX - bossHalfWidth)); 
+                    
+                    const minY = -50;
+                    const maxY = innerHeight * 0.4;
+                    bossTargetY = Math.max(minY, Math.min(maxY, playerY - 450 * scale));
+                } else if (chosen === 2) {
+                    bossState = "ATTACK2_PREP";
+                    stateTimer = time + 1000;
+                    
+                    if (bossHp <= 1500 && Math.random() < 0.5) {
+                        orbAttackVariant = "ROTATING_STREAMS";
+                        orbStreamAngle = Math.random() * Math.PI * 2;
+                    } else {
+                        orbAttackVariant = "SCATTER";
+                    }
+
+                    leftHand.classList.add("orb-hand-fast");
+                    rightHand.classList.add("orb-hand-fast");
+                    leftHand.style.left = "210px";
+                    leftHand.style.top = "210px";
+                    leftHand.style.transform = "rotate(-40deg) scaleY(-1)";
+                    
+                    rightHand.style.left = "438px";
+                    rightHand.style.top = "210px";
+                    rightHand.style.transform = "rotate(40deg) scaleY(-1)";
+                } else if (chosen === 3) {
+                    bossState = "ATTACK3_MOVE_DOWN";
+                    const bodyCenterLocalX = 344;
+                    const transformOriginX = 352;
+                    const bodyCenterLocalY = 213.5;
+                    const targetX = innerWidth / 2;
+                    const targetY = innerHeight / 2;
+                    
+                    bossTargetX = targetX - transformOriginX - (bodyCenterLocalX - transformOriginX) * scale;
+                    bossTargetY = targetY - bodyCenterLocalY * scale;
+                } else if (chosen === 5) {
+                    bossState = "ATTACK5_PREP";
+                    stateTimer = time + 600;
+                    pupilPulseScale = 1.8;
+                }
+            }
+        } 
+        else if (bossState === "ATTACK1_MOVE") {
+            destroyerX += (bossTargetX - destroyerX) * 0.06;
+            destroyerY += (bossTargetY - destroyerY) * 0.06;
+            
+            if (Math.hypot(bossTargetX - destroyerX, bossTargetY - destroyerY) < 10) {
+                bossState = "ATTACK1_SHOOT";
+                pupilPulseScale = 1.6;
+                
+                const eyeGlobalX = destroyerX + 352 + (344 - 352) * scale;
+                const eyeGlobalY = destroyerY + 223 * scale;
+                const baseAngle = Math.atan2(playerY - eyeGlobalY, playerX - eyeGlobalX);
+                
+                for(let i = 0; i < 10; i++) {
+                    const angleOffset = (i - 4.5) * 0.15;
+                    const finalAngle = baseAngle + angleOffset;
+                    
+                    bossProjectiles.push({
+                        type: "boomerang",
+                        x: eyeGlobalX, y: eyeGlobalY,
+                        vx: Math.cos(finalAngle) * 8,
+                        vy: Math.sin(finalAngle) * 8,
+                        rot: 0,
+                        state: "outward",
+                        returnTime: time + 600 + Math.random() * 1200,
+                        hitRadius: 15
+                    });
+                }
+                
+                stateTimer = time + 1000;
+            }
+        }
+        else if (bossState === "ATTACK1_SHOOT") {
+            if (time > stateTimer) {
+                bossState = "ATTACK1_RETURN";
+            }
+        }
+        else if (bossState === "ATTACK1_RETURN") {
+            destroyerX += (bossBaseX - destroyerX) * 0.04;
+            destroyerY += (bossBaseY - destroyerY) * 0.04;
+            
+            if (Math.hypot(bossBaseX - destroyerX, bossBaseY - destroyerY) < 5) {
+                bossState = "IDLE";
+                nextAttackTime = time + 2000;
+            }
+        }
+        else if (bossState === "ATTACK2_PREP") {
+            if (time > stateTimer) {
+                redBall.classList.add("active");
+                bossState = "ATTACK2_GROW";
+                stateTimer = time + 1000;
+            }
+        }
+        else if (bossState === "ATTACK2_GROW") {
+            if (time > stateTimer) {
+                redBall.classList.add("pulsing");
+                bossState = "ATTACK2_SHOOT";
+                stateTimer = time + 5500;
+                bossLastShootTime = time; 
+            }
+        }
+        else if (bossState === "ATTACK2_SHOOT") {
+            const ballGlobalX = destroyerX + 352 + (344 - 352) * scale;
+            const ballGlobalY = destroyerY + 318 * scale;
+
+            if (orbAttackVariant === "ROTATING_STREAMS") {
+                if (time > bossLastShootTime + 60) {
+                    orbStreamAngle += 0.18;
+                    for (let s = 0; s < 6; s++) {
+                        const streamAngle = orbStreamAngle + (s * Math.PI * 2 / 6);
+                        bossProjectiles.push({
+                            type: "ball_bullet",
+                            x: ballGlobalX, y: ballGlobalY,
+                            vx: Math.cos(streamAngle) * 6,
+                            vy: Math.sin(streamAngle) * 6,
+                            hitRadius: 6
+                        });
+                    }
+                    bossLastShootTime = time;
+                }
+            } else {
+                if (time > bossLastShootTime + 80) {
+                    const numBullets = 14; 
+                    for(let i=0; i<numBullets; i++) {
+                        const angle = Math.random() * Math.PI * 2;
+                        const speed = 2.5 + Math.random() * 6.5;
+                        
+                        bossProjectiles.push({
+                            type: "ball_bullet",
+                            x: ballGlobalX, y: ballGlobalY,
+                            vx: Math.cos(angle) * speed,
+                            vy: Math.sin(angle) * speed,
+                            hitRadius: 6
+                        });
+                    }
+                    bossLastShootTime = time;
+                }
+            }
+            
+            if (time > stateTimer) {
+                bossState = "ATTACK2_END";
+                redBall.classList.remove("active");
+                redBall.classList.remove("pulsing");
+                
+                leftHand.style.transform = "";
+                rightHand.style.transform = "";
+                leftHand.classList.remove("orb-hand-fast");
+                rightHand.classList.remove("orb-hand-fast");
+                leftHand.style.left = "293px";
+                leftHand.style.top = "263px";
+                rightHand.style.left = "355px";
+                rightHand.style.top = "263px";
+                
+                stateTimer = time + 1000;
+            }
+        }
+        else if (bossState === "ATTACK2_END") {
+            if (time > stateTimer) {
+                bossState = "IDLE";
+                nextAttackTime = time + 2000;
+            }
+        }
+        else if (bossState === "ATTACK3_MOVE_DOWN") {
+            destroyerX += (bossTargetX - destroyerX) * 0.05;
+            destroyerY += (bossTargetY - destroyerY) * 0.05;
+            
+            if (Math.hypot(bossTargetX - destroyerX, bossTargetY - destroyerY) < 10) {
+                bossState = "ATTACK3_PULSATE";
+                pupilPulseScale = 2.0;
+                stateTimer = time + 600;
+            }
+        }
+        else if (bossState === "ATTACK3_PULSATE") {
+            if (time > stateTimer) {
+                bossState = "ATTACK3_RETURN";
+                spiralActive = true;
+                spiralEndTime = time + 6500;
+                spiralNextSpawnTime = time;
+                spiralAngle = 0;
+                spiralCenterX = destroyerX + 352 + (344 - 352) * scale;
+                spiralCenterY = destroyerY + 213.5 * scale;
+            }
+        }
+        else if (bossState === "ATTACK3_RETURN") {
+            destroyerX += (bossBaseX - destroyerX) * 0.04;
+            destroyerY += (bossBaseY - destroyerY) * 0.04;
+            
+            if (Math.hypot(bossBaseX - destroyerX, bossBaseY - destroyerY) < 15) {
+                bossState = "IDLE";
+                nextAttackTime = time + 1000;
+            }
+        }
+        else if (bossState === "ATTACK5_PREP") {
+            if (time > stateTimer) {
+                bossState = "IDLE";
+                nextAttackTime = time + 1500;
+                
+                for (let i = 0; i < 14; i++) {
+                    bossProjectiles.push({
+                        type: "orbit_spike",
+                        angle: (Math.PI * 2 / 14) * i,
+                        dist: 0,
+                        maxDist: 140,
+                        shootTime: time + 2500 + Math.random() * 1500,
+                        vx: 0, vy: 0,
+                        rot: 0,
+                        lastTrailTime: 0
+                    });
+                }
+            }
+        }
+        else if (bossState === "ATTACK4_LEAVE") {
+            destroyerY += (bossTargetY - destroyerY) * 0.05;
+            if (destroyerY < -800 && spikeWaveCount === 0) {
+                bossState = "ATTACK4_SPIKES";
+                spikeWaveCount = 3;
+                stateTimer = time;
+            }
+        }
+        else if (bossState === "ATTACK4_SPIKES") {
+            if (spikeWaveCount > 0 && time > stateTimer) {
+                spawnEdgeSpikeWave(time);
+                spikeWaveCount--;
+                stateTimer = time + 1800;
+            } else if (spikeWaveCount === 0 && time > stateTimer) {
+                bossState = "ATTACK4_RETURN";
+            }
+        }
+        else if (bossState === "ATTACK4_RETURN") {
+            destroyerX += (bossBaseX - destroyerX) * 0.05;
+            destroyerY += (bossBaseY - destroyerY) * 0.05;
+            if (Math.hypot(bossBaseX - destroyerX, bossBaseY - destroyerY) < 10) {
+                bossState = "IDLE";
+                nextAttackTime = time + 1500;
+            }
+        }
+    }
+
+    if (!isDying && phase === 1 && bossHp <= 1600 && bossState !== "ATTACK2_PREP" && bossState !== "ATTACK2_GROW" && bossState !== "ATTACK2_SHOOT") {
+        if (!handSlamActive && time > nextHandSlamTime) {
+            handSlamActive = true;
+            handSlamPhase = "TOUCH";
+            handSlamTimer = time + 300;
+            
+            leftHand.style.left = "304px";
+            leftHand.style.top = "263px";
+            leftHand.style.transform = "rotate(15deg)";
+            
+            rightHand.style.left = "344px";
+            rightHand.style.top = "263px";
+            rightHand.style.transform = "rotate(-15deg)";
+        }
+        else if (handSlamActive) {
+            if (handSlamPhase === "TOUCH" && time > handSlamTimer) {
+                handSlamPhase = "SLAM";
+                handSlamTimer = time + 140;
+                leftHand.style.top = "370px";
+                rightHand.style.top = "370px";
+            }
+            else if (handSlamPhase === "SLAM" && time > handSlamTimer) {
+                document.body.classList.remove("screen-shake");
+                void document.body.offsetWidth;
+                document.body.classList.add("screen-shake");
+                
+                const slamX = destroyerX + 352 + (344 - 352) * scale;
+                const slamY = destroyerY + 370 * scale;
+                
+                const randomAngleOffset = Math.random() * Math.PI * 2;
+                for (let k = 0; k < 10; k++) {
+                    const angle = randomAngleOffset + (k * Math.PI * 2) / 10;
+                    bossProjectiles.push({
+                        type: "slam_strand_spike",
+                        x: slamX,
+                        y: slamY,
+                        angle: angle,
+                        width: 32,
+                        length: Math.hypot(innerWidth, innerHeight) * 1.5,
+                        triggerTime: time + 350,
+                        endTime: time + 1150
+                    });
+                }
+                
+                handSlamPhase = "RECOIL";
+                handSlamTimer = time + 250;
+                leftHand.style.top = "250px";
+                rightHand.style.top = "250px";
+            }
+            else if (handSlamPhase === "RECOIL" && time > handSlamTimer) {
+                leftHand.style.left = "293px";
+                leftHand.style.top = "263px";
+                leftHand.style.transform = "";
+                
+                rightHand.style.left = "355px";
+                rightHand.style.top = "263px";
+                rightHand.style.transform = "";
+                
+                handSlamActive = false;
+                handSlamPhase = "IDLE";
+                nextHandSlamTime = time + 2200 + Math.random() * 1800; 
+            }
+        }
+    }
+
+    if (!isDying && phase === 2 && !postFlyPhase) {
+        const p2DmgDealt = phase2HpStart - bossHp;
+
+        if (!phase2HandAttackUnlocked && p2DmgDealt >= 100) {
+            phase2HandAttackUnlocked = true;
+        }
+        if (!p2StarAttackUnlocked && p2DmgDealt >= 300) {
+            p2StarAttackUnlocked = true;
+            nextStarSpawnTime = time + 1000;
+        }
+        if (!p2FeatherAttackUnlocked && p2DmgDealt >= 300) {
+            p2FeatherAttackUnlocked = true;
+        }
+        if (!p2FlamethrowerUnlocked && p2DmgDealt >= 500) {
+            p2FlamethrowerUnlocked = true;
+        }
+        if (!p2CenterSpikeUnlocked && p2DmgDealt >= 550) {
+            p2CenterSpikeUnlocked = true;
+        }
+
+        if (!p2Enraged && bossHp <= 500) {
+            p2Enraged = true;
+            p2EnragedStartTime = time;
+            nextEnragedBurstTime = time + 500;
+            nextAttackTime = time + 250;
+        }
+
+        // The flying/falling phase begins when the boss reaches 90 HP.
+        if (!p2TransitionTriggered && bossHp <= 90) {
+            // Snap the threshold so the phase always begins at exactly 90 HP.
+            bossHp = 90;
+            updateBossHP();
+            triggerP2Transition(time);
+        }
+
+        if (inP2Transition) {
+            if (time > transitionNextFlameTime) {
+                const chestX = destroyerX + 352 + (344 - 352) * scale;
+                const chestY = destroyerY + 235 * scale;
+                const angleToP = Math.atan2(playerY - chestY, playerX - chestX);
+
+                bossProjectiles.push({
+                    type: "flame_circle",
+                    x: chestX,
+                    y: chestY,
+                    vx: Math.cos(angleToP) * 7.5,
+                    vy: Math.sin(angleToP) * 7.5,
+                    radius: 10,
+                    maxRadius: 50,
+                    growRate: 0.85,
+                    alpha: 1,
+                    color: "#ff3300",
+                    hitRadius: 10
+                });
+
+                transitionNextFlameTime = time + 2500;
+            }
+
+            // Keep the flying phase active until the boss reaches exactly 20 HP.
+            if (bossHp <= 20) {
+                bossHp = 20;
+                updateBossHP();
+                inP2Transition = false;
+                p2TransitionEnded = true;
+                p2TransitionEndTime = time;
+
+                targetFloorSpikeHeight = 0;
+                meteorSpeedMultiplier = 1.0;
+
+                wingLeft.classList.remove("fast-wing-bob");
+                wingRight.classList.remove("fast-wing-bob");
+                backWingLeft.classList.remove("fast-wing-bob");
+                backWingRight.classList.remove("fast-wing-bob");
+
+                // The hands are moved by several phase-2 attacks. Return them to
+                // their normal resting positions as soon as the flying phase ends
+                // so those attack poses do not carry into the breaking phase.
+                resetHandsToNormal();
+
+                bossState = "IDLE";
+                nextAttackTime = time + 3000;
+            }
+        }
+
+        // Once the flying phase has ended at 20 HP, begin the existing breaking
+        // sequence. The boss is no longer in the normal phase-2 attack loop.
+        if (!isDying && !postFlyPhase && !inP2Transition && p2TransitionEnded && bossHp <= 20) {
+            startDeathCutscene();
+        }
+
+        if (p2StarAttackUnlocked && activeStarOutlines.length < 2 && time > nextStarSpawnTime) {
+            const starRadius = (78 / 2) * scale;
+
+            let sX = 150 + Math.random() * (innerWidth - 300);
+            let sY = 150 + Math.random() * (innerHeight - 300);
+            if (Math.hypot(sX - (destroyerX + 352), sY - (destroyerY + 213.5)) < 220) {
+                sX = innerWidth * 0.2 + Math.random() * (innerWidth * 0.6);
+                sY = innerHeight * 0.2 + Math.random() * (innerHeight * 0.5);
+            }
+
+            activeStarOutlines.push({
+                x: sX,
+                y: sY,
+                radius: starRadius,
+                angle: Math.random() * Math.PI * 2,
+                spinSpeed: (Math.random() - 0.5) * 0.05,
+                spawnTime: time,
+                fadeInDuration: 300,
+                activeDuration: 2200,
+                fadeOutDuration: 300,
+                state: "fadeIn",
+                expanded: false
+            });
+            nextStarSpawnTime = time + 3500 + Math.random() * 2000;
+        }
+
+        const targetWingAnim = featherAttackActive ? 1 : 0;
+        wingAnimProgress += (targetWingAnim - wingAnimProgress) * 0.08;
+
+        const wingFlapOffset = featherAttackActive ? Math.sin(time * 0.02) * 18 : 0;
+        const wingScaleBonus = featherAttackActive ? (1 + Math.sin(time * 0.012) * 0.08) : 1;
+
+        wingLeft.style.transformOrigin = "90% 50%";
+        wingLeft.style.transform = `rotate(${-wingAnimProgress * 82 + wingFlapOffset}deg) translateX(${-wingAnimProgress * 30}px) translateY(${-wingAnimProgress * 18}px) scale(${(1 + wingAnimProgress * 0.35) * wingScaleBonus})`;
+        
+        wingRight.style.transformOrigin = "10% 50%";
+        wingRight.style.transform = `rotate(${wingAnimProgress * 82 - wingFlapOffset}deg) translateX(${wingAnimProgress * 30}px) translateY(${-wingAnimProgress * 18}px) scale(${(1 + wingAnimProgress * 0.35) * wingScaleBonus})`;
+
+        backWingLeft.style.transformOrigin = "90% 40%";
+        backWingLeft.style.transform = `rotate(${-wingAnimProgress * 96 + wingFlapOffset * 1.25}deg) translateY(${-wingAnimProgress * 28}px) scale(${(1 + wingAnimProgress * 0.38) * wingScaleBonus})`;
+
+        backWingRight.style.transformOrigin = "10% 40%";
+        backWingRight.style.transform = `rotate(${wingAnimProgress * 96 - wingFlapOffset * 1.25}deg) translateY(${wingAnimProgress * 28}px) scale(${(1 + wingAnimProgress * 0.38) * wingScaleBonus})`;
+
+        if (featherAttackActive) {
+            if (time > featherAttackEndTime) {
+                featherAttackActive = false;
+                resetHandsToNormal();
+                nextAttackTime = time + 1800;
+            } else if (time > nextFeatherSpawnTime) {
+                const lWingX = destroyerX + 352 + (155.5 - 352) * scale;
+                const lWingY = destroyerY + 194 * scale;
+                const rWingX = destroyerX + 352 + (526.5 - 352) * scale;
+                const rWingY = destroyerY + 194 * scale;
+
+                [[lWingX, lWingY], [rWingX, rWingY]].forEach((wPos, idx) => {
+                    const wx = wPos[0];
+                    const wy = wPos[1];
+                    const baseAng = idx === 0 ? Math.PI * 0.25 : Math.PI * 0.75;
+                    
+                    for (let f = 0; f < 2; f++) {
+                        const spreadAng = baseAng + (Math.random() - 0.5) * 1.6;
+                        bossProjectiles.push({
+                            type: "feather",
+                            x: wx,
+                            y: wy,
+                            vx: Math.cos(spreadAng) * (5.5 + Math.random() * 4.5),
+                            vy: Math.sin(spreadAng) * (5.5 + Math.random() * 4.5),
+                            waveOffset: Math.random() * Math.PI * 2,
+                            waveFreq: 0.012 + Math.random() * 0.008,
+                            waveAmp: 2.5 + Math.random() * 2,
+                            hitRadius: 12
+                        });
+                    }
+                });
+                nextFeatherSpawnTime = time + 110;
+            }
+        }
+
+        if (p2Enraged && !inP2Transition && time > nextEnragedBurstTime) {
+            const chestX = destroyerX + 352 + (344 - 352) * scale;
+            const chestY = destroyerY + 235 * scale;
+            const baseAngle = Math.atan2(playerY - chestY, playerX - chestX);
+            for (let f = 0; f < 3; f++) {
+                const a = baseAngle + (Math.random() - 0.5) * 0.95;
+                bossProjectiles.push({ type: "flame_circle", x: chestX, y: chestY, vx: Math.cos(a) * (8 + Math.random() * 3), vy: Math.sin(a) * (8 + Math.random() * 3), radius: 8, maxRadius: 38 + Math.random() * 18, growRate: 0.9, alpha: 1, color: "#ff0000", hitRadius: 8 });
+            }
+            nextEnragedBurstTime = time + 700;
+        }
+
+        if (bossState === "IDLE" && !inP2Transition) {
+            destroyerX += (bossBaseX - destroyerX) * 0.05;
+            destroyerY += (bossBaseY - destroyerY) * 0.05;
+
+            if (time > nextAttackTime && !featherAttackActive) {
+                let p2Attacks = [1, 2];
+                if (phase2HandAttackUnlocked) p2Attacks.push(3);
+                if (p2FlamethrowerUnlocked) p2Attacks.push(4);
+                if (p2CenterSpikeUnlocked) p2Attacks.push(5);
+
+                if (p2FeatherAttackUnlocked && lastAttackType !== 6 && Math.random() < 0.22) {
+                    p2Attacks.push(6);
+                }
+
+                if (p2Attacks.length > 1) {
+                    p2Attacks = p2Attacks.filter(a => a !== lastAttackType);
+                }
+                const chosen = p2Attacks[Math.floor(Math.random() * p2Attacks.length)];
+                lastAttackType = chosen;
+
+                if (chosen === 6) {
+                    featherAttackActive = true;
+                    featherAttackEndTime = time + 6500;
+                    nextFeatherSpawnTime = time;
+                }
+                else if (chosen === 1) {
+                    bossState = "P2_LASER_PREP";
+                    laserSweepDir = Math.random() < 0.5 ? 1 : -1;
+                    stateTimer = time + 1200; 
+                    pupilPulseScale = 2.2;
+                }
+                else if (chosen === 2) {
+                    bossState = "P2_RAIN_FOUNTAIN";
+                    stateTimer = time + 1800; 
+                    rainNextDropTime = time;
+                }
+                else if (chosen === 3) {
+                    bossState = "P2_HAND_BARRAGE";
+                    p2HandBarrageEndTime = time + 8000;
+                    p2HandBarrageNextShotTime = time;
+                    
+                    leftHand.style.left = "240px";
+                    leftHand.style.top = "240px";
+                    rightHand.style.left = "408px";
+                    rightHand.style.top = "240px";
+                }
+                else if (chosen === 4) {
+                    bossState = "P2_FLAMETHROWER";
+                    p2FlamethrowerEndTime = time + 5000;
+                    p2FlamethrowerNextShotTime = time;
+
+                    leftHand.style.left = "160px";
+                    leftHand.style.top = "210px";
+                    leftHand.style.transform = "rotate(-45deg)";
+
+                    rightHand.style.left = "488px";
+                    rightHand.style.top = "210px";
+                    rightHand.style.transform = "rotate(45deg)";
+                }
+                else if (chosen === 5) {
+                    bossState = "P2_CENTER_SPIKE";
+                    stateTimer = time + 4200;
+                    bossProjectiles.push({
+                        type: "center_safe_spikes",
+                        cx: innerWidth / 2,
+                        cy: innerHeight / 2,
+                        safeRadius: 65,
+                        warningEndTime: time + 2500,
+                        attackEndTime: time + 3800,
+                        state: "warning"
+                    });
+                }
+            }
+        }
+        else if (bossState === "P2_CENTER_SPIKE") {
+            if (time > stateTimer) {
+                bossState = "IDLE";
+                nextAttackTime = time + 2000;
+            }
+        }
+        else if (bossState === "P2_LASER_PREP") {
+            laserCurrentAngle = laserSweepDir === 1 ? Math.PI * 0.85 : Math.PI * 0.15;
+            laserTargetAngle = laserSweepDir === 1 ? Math.PI * 0.15 : Math.PI * 0.85;
+
+            if (time > stateTimer) {
+                bossState = "P2_LASER_FIRE";
+                stateTimer = time + 2600; 
+            }
+        }
+        else if (bossState === "P2_LASER_FIRE") {
+            const laserOriginX = destroyerX + 352 + (344 - 352) * scale;
+            const laserOriginY = destroyerY + 245 * scale;
+            
+            const progress = 1 - Math.max(0, (stateTimer - time) / 2600);
+            laserCurrentAngle = (laserSweepDir === 1 ? Math.PI * 0.85 : Math.PI * 0.15) + (laserTargetAngle - (laserSweepDir === 1 ? Math.PI * 0.85 : Math.PI * 0.15)) * progress;
+
+            const endX = laserOriginX + Math.cos(laserCurrentAngle) * 2000;
+            const endY = laserOriginY + Math.sin(laserCurrentAngle) * 2000;
+
+            ctx.save();
+            ctx.strokeStyle = "rgba(255, 0, 0, 0.35)";
+            ctx.lineWidth = 28;
+            ctx.beginPath();
+            ctx.moveTo(laserOriginX, laserOriginY);
+            ctx.lineTo(endX, endY);
+            ctx.stroke();
+
+            ctx.strokeStyle = "#ff0033";
+            ctx.lineWidth = 14;
+            ctx.shadowBlur = 20;
+            ctx.shadowColor = "#ff0000";
+            ctx.stroke();
+
+            ctx.strokeStyle = "#ffffff";
+            ctx.lineWidth = 5;
+            ctx.stroke();
+            ctx.restore();
+
+            if (!isDying && !isDead) {
+                const dx = endX - laserOriginX;
+                const dy = endY - laserOriginY;
+                const lenSq = dx * dx + dy * dy;
+                const proj = ((playerX - laserOriginX) * dx + (playerY - laserOriginY) * dy) / lenSq;
+                
+                if (proj >= 0 && proj <= 1) {
+                    const closestX = laserOriginX + proj * dx;
+                    const closestY = laserOriginY + proj * dy;
+                    const dist = Math.hypot(playerX - closestX, playerY - closestY);
+                    if (dist < 14 + playerHitRadius) {
+                        damagePlayer(18, time);
+                    }
+                }
+            }
+
+            if (time > stateTimer) {
+                bossState = "IDLE";
+                nextAttackTime = time + 2000;
+            }
+        }
+        else if (bossState === "P2_RAIN_FOUNTAIN") {
+            if (time > rainNextDropTime) {
+                const eyeX = destroyerX + 352 + (344 - 352) * scale;
+                const eyeY = destroyerY + 223 * scale;
+
+                for (let f = 0; f < 5; f++) {
+                    particles.push({
+                        x: eyeX + (Math.random() - 0.5) * 24,
+                        y: eyeY,
+                        vx: (Math.random() - 0.5) * 6,
+                        vy: -12 - Math.random() * 9,
+                        alpha: 1,
+                        decay: 0.02,
+                        size: 3.5 + Math.random() * 3.5,
+                        color: "#ff0033"
+                    });
+                }
+                rainNextDropTime = time + 35;
+            }
+
+            if (time > stateTimer) {
+                bossState = "P2_RAIN_FALL";
+                rainSpawnEndTime = time + 3500; 
+                rainNextDropTime = time;
+                stateTimer = time + 4800;
+            }
+        }
+        else if (bossState === "P2_RAIN_FALL") {
+            if (time < rainSpawnEndTime && time > rainNextDropTime) {
+                for (let r = 0; r < 4; r++) {
+                    bgProjectiles.push({
+                        type: "raindrop",
+                        x: Math.random() * innerWidth,
+                        y: -30,
+                        vy: 13 + Math.random() * 8,
+                        vx: (Math.random() - 0.5) * 1.5,
+                        size: 9,
+                        hitRadius: 7
+                    });
+                }
+                rainNextDropTime = time + 50;
+            }
+
+            if (time > stateTimer) {
+                bossState = "IDLE";
+                nextAttackTime = time + 1800;
+            }
+        }
+        else if (bossState === "P2_HAND_BARRAGE") {
+            if (time < p2HandBarrageEndTime) {
+                if (time > p2HandBarrageNextShotTime) {
+                    const leftHandX = destroyerX + 352 + (293 - 352) * scale;
+                    const leftHandY = destroyerY + 263 * scale;
+                    const rightHandX = destroyerX + 352 + (355 - 352) * scale;
+                    const rightHandY = destroyerY + 263 * scale;
+
+                    const leftAngle = Math.atan2(playerY - leftHandY, playerX - leftHandX);
+                    const rightAngle = Math.atan2(playerY - rightHandY, playerX - rightHandX);
+
+                    for (let tIdx = -1; tIdx <= 1; tIdx++) {
+                        const lVarAngle = leftAngle + tIdx * 0.22;
+                        const rVarAngle = rightAngle + tIdx * 0.22;
+
+                        bossProjectiles.push({
+                            type: "rounded_triangle",
+                            x: leftHandX, y: leftHandY,
+                            vx: Math.cos(lVarAngle) * 15,
+                            vy: Math.sin(lVarAngle) * 15,
+                            angle: lVarAngle,
+                            hitRadius: 10
+                        });
+
+                        bossProjectiles.push({
+                            type: "rounded_triangle",
+                            x: rightHandX, y: rightHandY,
+                            vx: Math.cos(rVarAngle) * 15,
+                            vy: Math.sin(rVarAngle) * 15,
+                            angle: rVarAngle,
+                            hitRadius: 10
+                        });
+                    }
+
+                    p2HandBarrageNextShotTime = time + 350;
+                }
+            } else {
+                leftHand.style.left = "293px";
+                leftHand.style.top = "263px";
+                rightHand.style.left = "355px";
+                rightHand.style.top = "263px";
+
+                bossState = "IDLE";
+                nextAttackTime = time + 1500;
+            }
+        }
+        else if (bossState === "P2_FLAMETHROWER") {
+            if (time < p2FlamethrowerEndTime) {
+                if (time > p2FlamethrowerNextShotTime) {
+                    const chestX = destroyerX + 352 + (344 - 352) * scale;
+                    const chestY = destroyerY + 235 * scale;
+                    const baseAngle = Math.atan2(playerY - chestY, playerX - chestX);
+
+                    for (let fCount = 0; fCount < 2; fCount++) {
+                        const spreadAngle = baseAngle + (Math.random() - 0.5) * 0.38;
+                        const spd = 7 + Math.random() * 4;
+
+                        bossProjectiles.push({
+                            type: "flame_circle",
+                            x: chestX,
+                            y: chestY,
+                            vx: Math.cos(spreadAngle) * spd,
+                            vy: Math.sin(spreadAngle) * spd,
+                            radius: 8,
+                            maxRadius: 42 + Math.random() * 18,
+                            growRate: 0.7 + Math.random() * 0.4,
+                            alpha: 1,
+                            color: Math.random() > 0.5 ? "#ff0000" : "#cc0000",
+                            hitRadius: 8
+                        });
+                    }
+
+                    p2FlamethrowerNextShotTime = time + 45;
+                }
+            } else {
+                resetHandsToNormal();
+
+                bossState = "IDLE";
+                nextAttackTime = time + 1800;
+            }
+        }
+    }
+
+    updateSceneTransforms();
+
+    floorSpikeHeight += (targetFloorSpikeHeight - floorSpikeHeight) * 0.1;
+    if (floorSpikeHeight > 1) {
+        ctx.save();
+        ctx.fillStyle = "#800000";
+        ctx.strokeStyle = "#ff3333";
+        ctx.lineWidth = 1.5;
+
+        const spikeW = 20;
+        const count = Math.ceil(innerWidth / spikeW);
+        ctx.beginPath();
+        ctx.moveTo(0, innerHeight);
+        for (let s = 0; s <= count; s++) {
+            const sx = s * spikeW;
+            ctx.lineTo(sx - spikeW / 2, innerHeight - floorSpikeHeight);
+            ctx.lineTo(sx, innerHeight);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+
+        if (!isDying && !isDead && playerY >= innerHeight - floorSpikeHeight - playerHitRadius) {
+            damagePlayer(10, time);
+        }
+    }
+
+    for (let i = bgProjectiles.length - 1; i >= 0; i--) {
+        let p = bgProjectiles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+
+        bgCtx.save();
+        bgCtx.translate(p.x, p.y);
+        bgCtx.fillStyle = "#ff0033";
+        bgCtx.shadowBlur = 12;
+        bgCtx.shadowColor = "#ff0000";
+        bgCtx.beginPath();
+        bgCtx.moveTo(0, -p.size * 1.8);
+        bgCtx.quadraticCurveTo(p.size, 0, 0, p.size);
+        bgCtx.quadraticCurveTo(-p.size, 0, 0, -p.size * 1.8);
+        bgCtx.fill();
+        bgCtx.restore();
+
+        if (!isDying && !isDead && Math.hypot(playerX - p.x, playerY - p.y) < p.hitRadius + playerHitRadius) {
+            damagePlayer(6, time);
+            bgProjectiles.splice(i, 1);
+            continue;
+        }
+
+        if (p.y > innerHeight + 40) {
+            bgProjectiles.splice(i, 1);
+            continue;
+        }
+    }
+
+    for (let i = activeStarOutlines.length - 1; i >= 0; i--) {
+        let star = activeStarOutlines[i];
+        let alpha = 1;
+        const elapsed = time - star.spawnTime;
+
+        if (elapsed < star.fadeInDuration) {
+            alpha = elapsed / star.fadeInDuration;
+            star.state = "fadeIn";
+        } else if (elapsed < star.fadeInDuration + star.activeDuration) {
+            alpha = 1;
+            star.state = "active";
+            
+            if (!star.expanded && elapsed >= 1200) {
+                star.expanded = true;
+                for (let pt = 0; pt < 5; pt++) {
+                    const ptAngle = star.angle + (pt * Math.PI * 2 / 5) - Math.PI / 2;
+                    const tipX = star.x + Math.cos(ptAngle) * star.radius;
+                    const tipY = star.y + Math.sin(ptAngle) * star.radius;
+                    
+                    for (let st = 0; st < 6; st++) {
+                        const strandAng = ptAngle + (Math.random() - 0.5) * 0.45;
+                        bossProjectiles.push({
+                            type: "star_strand",
+                            x: tipX, y: tipY,
+                            vx: Math.cos(strandAng) * (13.5 + Math.random() * 7.5),
+                            vy: Math.sin(strandAng) * (13.5 + Math.random() * 7.5),
+                            hitRadius: 5,
+                            expireTime: time + 1800
+                        });
+                    }
+                }
+            }
+        } else if (elapsed < star.fadeInDuration + star.activeDuration + star.fadeOutDuration) {
+            alpha = 1 - (elapsed - star.fadeInDuration - star.activeDuration) / star.fadeOutDuration;
+            star.state = "fadeOut";
+        } else {
+            activeStarOutlines.splice(i, 1);
+            continue;
+        }
+
+        star.angle += star.spinSpeed;
+
+        ctx.save();
+        ctx.globalAlpha = alpha * 0.85;
+        ctx.strokeStyle = "#ff0033";
+        ctx.lineWidth = 2.5;
+        ctx.shadowBlur = 12;
+        ctx.shadowColor = "#ff0000";
+
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.beginPath();
+        for (let pt = 0; pt < 5; pt++) {
+            const outerAngle = star.angle + (pt * Math.PI * 2 / 5) - Math.PI / 2;
+            const innerAngle = star.angle + ((pt + 0.5) * Math.PI * 2 / 5) - Math.PI / 2;
+            const outerX = star.x + Math.cos(outerAngle) * star.radius;
+            const outerY = star.y + Math.sin(outerAngle) * star.radius;
+            const innerX = star.x + Math.cos(innerAngle) * (star.radius * 0.45);
+            const innerY = star.y + Math.sin(innerAngle) * (star.radius * 0.45);
+
+            if (pt === 0) ctx.moveTo(outerX, outerY);
+            else ctx.lineTo(outerX, outerY);
+            ctx.lineTo(innerX, innerY);
+        }
+        ctx.closePath();
+        ctx.stroke();
+        ctx.restore();
+    }
+
+    const bossCenterX = destroyerX + 352 + (344 - 352) * scale; 
+    const bossCenterY = destroyerY + 213.5 * scale;
+    const bossHitRadius = 38 * scale * bossExtraScale; 
+
+    for (let i = playerBullets.length - 1; i >= 0; i--) {
+        let b = playerBullets[i];
+        b.x += b.vx;
+        b.y += b.vy;
+
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, 4, 0, Math.PI * 2);
+        ctx.fill();
+
+        if (!isDying || wallClosingActive) {
+            const dist = Math.hypot(b.x - bossCenterX, b.y - bossCenterY);
+            if (dist < bossHitRadius) {
+                // During the flying phase, stop exactly at the 20 HP endpoint.
+                // This prevents a fast bullet stream from skipping the phase end.
+                bossHp = inP2Transition ? Math.max(20, bossHp - 1) : bossHp - 1;
+
+                if (inP2Transition) {
+                    p2TransitionDamageDealt += 1;
+                }
+
+                updateBossHP();
+                playerBullets.splice(i, 1);
+                
+                particles.push({
+                    x: b.x, y: b.y,
+                    vx: -b.vx * 0.2 + (Math.random()-0.5)*2,
+                    vy: -b.vy * 0.2 + (Math.random()-0.5)*2,
+                    alpha: 1, decay: 0.05, size: 3, color: "#fff"
+                });
+
+                if (bossHp <= maxBossHp * 0.66 && phase === 1) {
+                    enterPhase2();
+                }
+                continue;
+            }
+        }
+
+        if (b.x < 0 || b.x > innerWidth || b.y < 0 || b.y > innerHeight) {
+            playerBullets.splice(i, 1);
+        }
+    }
+
+    for (let i = bossProjectiles.length - 1; i >= 0; i--) {
+        let p = bossProjectiles[i];
+        
+        if (p.type === "center_safe_spikes") {
+            if (time < p.warningEndTime) {
+                const pulse = 1 + Math.sin(time * 0.015) * 0.08;
+                ctx.save();
+                ctx.strokeStyle = "#ff2222";
+                ctx.lineWidth = 3;
+                ctx.shadowBlur = 15;
+                ctx.shadowColor = "#ff0000";
+                ctx.beginPath();
+                ctx.arc(p.cx, p.cy, p.safeRadius * pulse, 0, Math.PI * 2);
+                ctx.stroke();
+
+                ctx.fillStyle = "rgba(255, 0, 0, 0.12)";
+                ctx.beginPath();
+                ctx.arc(p.cx, p.cy, p.safeRadius * pulse, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            } else if (time < p.attackEndTime) {
+                const progress = Math.min(1, (time - p.warningEndTime) / 250);
+                const fade = Math.max(0, 1 - (time - p.attackEndTime + 300) / 300);
+
+                ctx.save();
+                ctx.globalAlpha = fade;
+                
+                ctx.strokeStyle = "#ffffff";
+                ctx.lineWidth = 4;
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = "#ffffff";
+                ctx.beginPath();
+                ctx.arc(p.cx, p.cy, p.safeRadius, 0, Math.PI * 2);
+                ctx.stroke();
+
+                const numSpikes = 42;
+                ctx.fillStyle = "#880000";
+                ctx.strokeStyle = "#ff0000";
+                ctx.lineWidth = 2;
+
+                for (let s = 0; s < numSpikes; s++) {
+                    const angle = (s * Math.PI * 2) / numSpikes;
+                    const maxDist = Math.hypot(innerWidth, innerHeight);
+                    const tipX = p.cx + Math.cos(angle) * (p.safeRadius + (maxDist - p.safeRadius) * (1 - progress));
+                    const tipY = p.cy + Math.sin(angle) * (p.safeRadius + (maxDist - p.safeRadius) * (1 - progress));
+
+                    const outerX1 = p.cx + Math.cos(angle - 0.08) * maxDist;
+                    const outerY1 = p.cy + Math.sin(angle - 0.08) * maxDist;
+                    const outerX2 = p.cx + Math.cos(angle + 0.08) * maxDist;
+                    const outerY2 = p.cy + Math.sin(angle + 0.08) * maxDist;
+
+                    ctx.beginPath();
+                    ctx.moveTo(outerX1, outerY1);
+                    ctx.lineTo(tipX, tipY);
+                    ctx.lineTo(outerX2, outerY2);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
+                }
+                ctx.restore();
+
+                if (!isDying && !isDead) {
+                    const distToCenter = Math.hypot(playerX - p.cx, playerY - p.cy);
+                    if (distToCenter > p.safeRadius - playerHitRadius) {
+                        damagePlayer(16, time);
+                    }
+                }
+            } else {
+                bossProjectiles.splice(i, 1);
+                continue;
+            }
+        }
+        else if (p.type === "boomerang") {
+            if (p.state === "outward" && time > p.returnTime) {
+                p.state = "returning";
+                const angle = Math.atan2(playerY - p.y, playerX - p.x);
+                p.vx = Math.cos(angle) * 11;
+                p.vy = Math.sin(angle) * 11;
+            }
+            
+            p.x += p.vx;
+            p.y += p.vy;
+            p.rot += 0.3;
+            
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            ctx.rotate(p.rot);
+            ctx.fillStyle = "#ff0033";
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = "#ff0000";
+            ctx.beginPath();
+            ctx.arc(0, 0, 18, 0, Math.PI, false);
+            ctx.arc(0, 6, 12, Math.PI, 0, true);
+            ctx.fill();
+            ctx.restore();
+            
+            if (p.state === "returning" && 
+               (p.x < -300 || p.x > innerWidth + 300 || p.y < -300 || p.y > innerHeight + 300)) {
+                bossProjectiles.splice(i, 1);
+                continue;
+            }
+        } 
+        else if (p.type === "ball_bullet") {
+            p.x += p.vx;
+            p.y += p.vy;
+            
+            ctx.fillStyle = "#ff0033";
+            ctx.shadowBlur = 8;
+            ctx.shadowColor = "#ff0000";
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.hitRadius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.shadowBlur = 0;
+            
+            if (p.x < -20 || p.x > innerWidth + 20 || p.y < -20 || p.y > innerHeight + 20) {
+                bossProjectiles.splice(i, 1);
+                continue;
+            }
+        }
+        else if (p.type === "rounded_triangle") {
+            p.x += p.vx;
+            p.y += p.vy;
+
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            ctx.rotate(p.angle);
+            ctx.fillStyle = "#ff0033";
+            ctx.shadowBlur = 12;
+            ctx.shadowColor = "#ff0000";
+            ctx.beginPath();
+            ctx.moveTo(18, 0);
+            ctx.lineTo(-12, -12);
+            ctx.quadraticCurveTo(-16, 0, -12, 12);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+
+            if (p.x < -50 || p.x > innerWidth + 50 || p.y < -50 || p.y > innerHeight + 50) {
+                bossProjectiles.splice(i, 1);
+                continue;
+            }
+        }
+        else if (p.type === "flame_circle") {
+            p.x += p.vx;
+            p.y += p.vy;
+
+            if (p.radius < p.maxRadius) {
+                p.radius += p.growRate;
+            }
+            p.hitRadius = p.radius * 0.82;
+            p.alpha -= 0.007;
+
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            ctx.globalAlpha = Math.max(0, p.alpha);
+
+            const grad = ctx.createRadialGradient(0, 0, p.radius * 0.15, 0, 0, p.radius);
+            grad.addColorStop(0, "#ff6666");
+            grad.addColorStop(0.35, "#ff0000");
+            grad.addColorStop(0.7, p.color);
+            grad.addColorStop(1, "rgba(120, 0, 0, 0)");
+
+            ctx.fillStyle = grad;
+            ctx.shadowBlur = 16;
+            ctx.shadowColor = "#ff0000";
+            ctx.beginPath();
+            ctx.arc(0, 0, p.radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+
+            if (p.alpha <= 0 || p.x < -120 || p.x > innerWidth + 120 || p.y < -120 || p.y > innerHeight + 120) {
+                bossProjectiles.splice(i, 1);
+                continue;
+            }
+
+            if (!isDying && !isDead) {
+                const hitDist = Math.hypot(p.x - playerX, p.y - playerY);
+                if (hitDist < p.hitRadius + playerHitRadius) {
+                    damagePlayer(3, time);
+                }
+            }
+        }
+        else if (p.type === "feather") {
+            p.waveOffset += p.waveFreq;
+            const lateralOffset = Math.sin(p.waveOffset) * p.waveAmp;
+            p.x += p.vx + lateralOffset;
+            p.y += p.vy;
+
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            ctx.rotate(Math.atan2(p.vy, p.vx + lateralOffset));
+            ctx.fillStyle = "#ff1a40";
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = "#ff0000";
+            ctx.beginPath();
+            ctx.moveTo(21, 0);
+            ctx.quadraticCurveTo(0, -10.5, -24.5, -3.5);
+            ctx.quadraticCurveTo(-7, 0, -24.5, 3.5);
+            ctx.quadraticCurveTo(0, 10.5, 21, 0);
+            ctx.fill();
+            ctx.restore();
+
+            if (p.x < -60 || p.x > innerWidth + 60 || p.y > innerHeight + 60) {
+                bossProjectiles.splice(i, 1);
+                continue;
+            }
+        }
+        else if (p.type === "star_strand") {
+            if (time > p.expireTime || p.x < -100 || p.x > innerWidth + 100 || p.y < -100 || p.y > innerHeight + 100) {
+                bossProjectiles.splice(i, 1);
+                continue;
+            }
+            p.x += p.vx;
+            p.y += p.vy;
+
+            ctx.save();
+            ctx.fillStyle = "#ff0033";
+            ctx.shadowBlur = 8;
+            ctx.shadowColor = "#ff0000";
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.hitRadius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+
+            if (!isDying && !isDead && Math.hypot(playerX - p.x, playerY - p.y) < p.hitRadius + playerHitRadius) {
+                damagePlayer(6, time);
+            }
+        }
+        else if (p.type === "edge_spike") {
+            const dx = Math.cos(p.angle);
+            const dy = Math.sin(p.angle);
+            const len = p.length;
+            const halfW = p.width / 2;
+
+            if (time < p.triggerTime) {
+                ctx.save();
+                ctx.translate(p.x, p.y);
+                ctx.rotate(p.angle);
+                
+                ctx.fillStyle = "rgba(130, 0, 0, 0.35)";
+                ctx.fillRect(0, -halfW, len, p.width);
+                ctx.strokeStyle = "rgba(200, 30, 30, 0.75)";
+                ctx.lineWidth = 1.5;
+                ctx.strokeRect(0, -halfW, len, p.width);
+                ctx.restore();
+            } else if (time < p.endTime) {
+                const progress = Math.min(1, (time - p.triggerTime) / 100); 
+                const fade = Math.max(0, 1 - (time - p.triggerTime - 100) / (p.endTime - p.triggerTime - 100)); 
+                const currentLen = len * progress;
+                
+                ctx.save();
+                ctx.globalAlpha = fade;
+                ctx.translate(p.x, p.y);
+                ctx.rotate(p.angle);
+                
+                ctx.fillStyle = "#7a0000";
+                ctx.beginPath();
+                ctx.moveTo(0, -halfW);
+                ctx.lineTo(currentLen, 0);
+                ctx.lineTo(0, halfW);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.fillStyle = "#b30000";
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(currentLen, 0);
+                ctx.lineTo(0, halfW);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.strokeStyle = "#400000";
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                ctx.restore();
+                
+                if (!isDying && !isDead) {
+                    const vx = playerX - p.x;
+                    const vy = playerY - p.y;
+                    const proj = vx * dx + vy * dy;
+                    if (proj > 0 && proj < currentLen) {
+                        const perpDistSq = (vx * vx + vy * vy) - (proj * proj);
+                        if (perpDistSq >= 0 && perpDistSq < Math.pow(halfW + playerHitRadius, 2)) {
+                            damagePlayer(15, time);
+                        }
+                    }
+                }
+            } else {
+                bossProjectiles.splice(i, 1);
+                continue;
+            }
+        }
+        else if (p.type === "slam_strand_spike") {
+            const dx = Math.cos(p.angle);
+            const dy = Math.sin(p.angle);
+            const len = p.length;
+            const halfW = p.width / 2;
+
+            if (time < p.triggerTime) {
+                ctx.save();
+                ctx.translate(p.x, p.y);
+                ctx.rotate(p.angle);
+                ctx.fillStyle = "rgba(180, 0, 0, 0.3)";
+                ctx.fillRect(0, -halfW, len, p.width);
+                ctx.strokeStyle = "rgba(255, 50, 50, 0.8)";
+                ctx.lineWidth = 1.5;
+                ctx.strokeRect(0, -halfW, len, p.width);
+                ctx.restore();
+            } else if (time < p.endTime) {
+                const progress = Math.min(1, (time - p.triggerTime) / 120);
+                const fade = Math.max(0, 1 - (time - p.triggerTime - 120) / (p.endTime - p.triggerTime - 120));
+                const currentLen = len * progress;
+
+                ctx.save();
+                ctx.globalAlpha = fade;
+                ctx.translate(p.x, p.y);
+                ctx.rotate(p.angle);
+
+                ctx.fillStyle = "#800000";
+                ctx.beginPath();
+                ctx.moveTo(0, -halfW);
+                ctx.lineTo(currentLen * 0.3, -halfW * 0.8);
+                ctx.lineTo(currentLen * 0.6, -halfW * 0.9);
+                ctx.lineTo(currentLen, 0);
+                ctx.lineTo(currentLen * 0.6, halfW * 0.9);
+                ctx.lineTo(currentLen * 0.3, halfW * 0.8);
+                ctx.lineTo(0, halfW);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.fillStyle = "#cc0000";
+                ctx.beginPath();
+                ctx.moveTo(0, 0);
+                ctx.lineTo(currentLen, 0);
+                ctx.lineTo(0, halfW);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.restore();
+
+                if (!isDying && !isDead) {
+                    const vx = playerX - p.x;
+                    const vy = playerY - p.y;
+                    const proj = vx * dx + vy * dy;
+                    if (proj > 0 && proj < currentLen) {
+                        const perpDistSq = (vx * vx + vy * vy) - (proj * proj);
+                        if (perpDistSq >= 0 && perpDistSq < Math.pow(halfW * 0.8 + playerHitRadius, 2)) {
+                            damagePlayer(15, time);
+                        }
+                    }
+                }
+            } else {
+                bossProjectiles.splice(i, 1);
+                continue;
+            }
+        }
+        else if (p.type === "orbit_spike") {
+            const eyeX = destroyerX + 352 + (344 - 352) * scale;
+            const eyeY = destroyerY + 223 * scale;
+
+            if (time < p.shootTime) {
+                if (p.dist < p.maxDist) p.dist += 4;
+                p.angle += 0.03;
+                p.x = eyeX + Math.cos(p.angle) * p.dist;
+                p.y = eyeY + Math.sin(p.angle) * p.dist;
+                p.rot = p.angle + Math.PI / 2;
+            } else if (p.vx === 0 && p.vy === 0) {
+                const targetAngle = Math.atan2(playerY - p.y, playerX - p.x);
+                p.vx = Math.cos(targetAngle) * 12;
+                p.vy = Math.sin(targetAngle) * 12;
+                p.rot = targetAngle;
+            } else {
+                p.x += p.vx;
+                p.y += p.vy;
+            }
+
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            ctx.rotate(p.rot);
+            ctx.fillStyle = "#ff0033";
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = "#ff0000";
+            ctx.beginPath();
+            ctx.moveTo(16, 0);
+            ctx.lineTo(-12, -8);
+            ctx.lineTo(-6, 0);
+            ctx.lineTo(-12, 8);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+
+            if (p.x < -100 || p.x > innerWidth + 100 || p.y < -100 || p.y > innerHeight + 100) {
+                bossProjectiles.splice(i, 1);
+                continue;
+            }
+        }
+
+        if (p.type !== "flame_circle" && p.type !== "feather" && p.type !== "edge_spike" && p.type !== "slam_strand_spike" && p.type !== "center_safe_spikes" && p.type !== "star_strand") {
+            if (!isDying && !isDead) {
+                const dist = Math.hypot(playerX - p.x, playerY - p.y);
+                if (dist < p.hitRadius + playerHitRadius) {
+                    damagePlayer(10, time);
+                }
+            }
+        }
+    }
+
+    if (spiralActive) {
+        if (time > spiralEndTime) {
+            spiralActive = false;
+        } else if (time > spiralNextSpawnTime) {
+            spiralAngle += 0.22;
+            for (let s = 0; s < 3; s++) {
+                const ang = spiralAngle + (s * Math.PI * 2 / 3);
+                bossProjectiles.push({
+                    type: "ball_bullet",
+                    x: spiralCenterX,
+                    y: spiralCenterY,
+                    vx: Math.cos(ang) * 5.5,
+                    vy: Math.sin(ang) * 5.5,
+                    hitRadius: 6
+                });
+            }
+            spiralNextSpawnTime = time + 70;
+        }
+    }
+
+    for (let i = particles.length - 1; i >= 0; i--) {
+        let pt = particles[i];
+        pt.x += pt.vx;
+        pt.y += pt.vy;
+        pt.alpha -= pt.decay;
+
+        if (pt.alpha <= 0) {
+            particles.splice(i, 1);
+            continue;
+        }
+
+        ctx.fillStyle = pt.color;
+        ctx.globalAlpha = Math.max(0, pt.alpha);
+        ctx.beginPath();
+        ctx.arc(pt.x, pt.y, pt.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+    }
+
+    const eyeBaseX = destroyerX + 352 + (344 - 352) * scale;
+    const eyeBaseY = destroyerY + 223 * scale;
+    
+    let lookTargetX = playerX;
+    let lookTargetY = playerY;
+
+    // Phase 1 orb attack: look down at the red orb being charged/fired.
+    if (bossState === "ATTACK2_PREP" || bossState === "ATTACK2_GROW" || bossState === "ATTACK2_SHOOT") {
+        lookTargetX = destroyerX + 352 + (344 - 352) * scale;
+        lookTargetY = destroyerY + 340 * scale;
+    }
+
+    // Phase 2 laser attack: look along the exact direction of the laser.
+    if (bossState === "P2_LASER_PREP" || bossState === "P2_LASER_FIRE") {
+        const laserOriginX = destroyerX + 352 + (344 - 352) * scale;
+        const laserOriginY = destroyerY + 245 * scale;
+        const startAngle = laserSweepDir === 1 ? Math.PI * 0.85 : Math.PI * 0.15;
+        const targetAngle = laserSweepDir === 1 ? Math.PI * 0.15 : Math.PI * 0.85;
+        let laserLookAngle = startAngle;
+        if (bossState === "P2_LASER_FIRE") {
+            const progress = 1 - Math.max(0, (stateTimer - performance.now()) / 2600);
+            laserLookAngle = startAngle + (targetAngle - startAngle) * progress;
+        }
+        lookTargetX = laserOriginX + Math.cos(laserLookAngle) * 2000;
+        lookTargetY = laserOriginY + Math.sin(laserLookAngle) * 2000;
+    }
+
+    if (isDying && fallingParts.length > 0) {
+        const fp = fallingParts[fallingParts.length - 1];
+        lookTargetX = destroyerX + 352 + (fp.x - 352) * scale;
+        lookTargetY = destroyerY + fp.y * scale;
+    } else if (isDying && deathEyeTarget) {
+        const targetX = parseFloat(deathEyeTarget.style.left) || 0;
+        const targetY = parseFloat(deathEyeTarget.style.top) || 0;
+        const targetWidth = deathEyeTarget.offsetWidth || 0;
+        const targetHeight = deathEyeTarget.offsetHeight || 0;
+        lookTargetX = destroyerX + 352 + (targetX + targetWidth / 2 - 352) * scale;
+        lookTargetY = destroyerY + (targetY + targetHeight / 2) * scale;
+    }
+
+    const angleToPlayer = Math.atan2(lookTargetY - eyeBaseY, lookTargetX - eyeBaseX);
+    const distToPlayer = Math.min(6 * scale, Math.hypot(lookTargetX - eyeBaseX, lookTargetY - eyeBaseY) * 0.02);
+
+    const targetEyeX = Math.cos(angleToPlayer) * distToPlayer;
+    const targetEyeY = Math.sin(angleToPlayer) * distToPlayer;
+    
+    currentEyeX += (targetEyeX - currentEyeX) * 0.1;
+    currentEyeY += (targetEyeY - currentEyeY) * 0.1;
+
+    const maxPupilDownOffset = 30;
+    currentEyeY = Math.min(currentEyeY, maxPupilDownOffset);
+
+    pupilPulseScale += (1 - pupilPulseScale) * 0.05;
+    pupil.style.transform = `translate(${currentEyeX}px, ${currentEyeY}px) scale(${pupilPulseScale})`;
+
+    if (isDying) {
+        processDeathCutscene(time);
+        
+        for (let i = fallingParts.length - 1; i >= 0; i--) {
+            let fp = fallingParts[i];
+            fp.vy += 0.25;
+            fp.y += fp.vy;
+            fp.rot += fp.vr;
+            fp.el.style.top = fp.y + "px";
+            fp.el.style.transform = `rotate(${fp.rot}deg)`;
+
+            if (destroyerY + fp.y * scale > innerHeight + 180) {
+                fp.el.style.display = "none";
+                fallingParts.splice(i, 1);
+            }
+        }
+
+        if (fallingParts.length > 0) {
+            deathEyeTarget = fallingParts[fallingParts.length - 1].el;
+        }
+
+        updateWallClosingPhase(time);
+    }
+
+    processEndingCinematic(time);
+}
+
+resetPhaseVisuals();
+resizeCanvas();
+updatePlayerHP();
+updateBossHP();
+requestAnimationFrame(gameLoop);
+</script>
+</body>
+</html>
