@@ -488,7 +488,7 @@ img {
 
 <div class="pause-overlay" id="pause-overlay">
     <div class="pause-title">PAUSED</div>
-    <div class="pause-subtitle">Press [P] to Resume</div>
+    <div class="pause-subtitle">Press [P] to Resume | Press [H+J] to skip to Phase 2 | Press [H+L] to skip to the flying phase</div>
 </div>
 
 <div class="death-overlay" id="death-overlay">
@@ -499,7 +499,7 @@ img {
 
 <div class="win-overlay" id="win-overlay">
     <div class="win-title">VICTORY</div>
-    <div class="pause-subtitle">the destroyer has been destroyed, but at what cost!</div>
+    <div class="pause-subtitle">The Destroyer has been defeated!</div>
     <button class="overlay-btn win-btn" onclick="restartGame()">PLAY AGAIN</button>
 </div>
 
@@ -579,6 +579,8 @@ const endingFog = document.getElementById("ending-fog");
 const endingFade = document.getElementById("ending-fade");
 
 let isPaused = false;
+let pauseStartedAt = 0;
+let pausedDuration = 0;
 let isDead = false;
 let isWon = false;
 let isDying = false; 
@@ -905,6 +907,11 @@ function checkPhase2SkipShortcut() {
 }
 
 
+function getGameTime(realTime) {
+    const activePauseTime = isPaused && pauseStartedAt > 0 ? realTime - pauseStartedAt : 0;
+    return realTime - pausedDuration - activePauseTime;
+}
+
 window.addEventListener("keydown", (e) => {
     const k = e.key.toLowerCase();
     if(keys.hasOwnProperty(k)) keys[k] = true;
@@ -912,7 +919,15 @@ window.addEventListener("keydown", (e) => {
     checkPhase2SkipShortcut();
 
     if(k === 'p' && !isDead && !isWon) {
-        isPaused = !isPaused;
+        const now = performance.now();
+        if (!isPaused) {
+            isPaused = true;
+            pauseStartedAt = now;
+        } else {
+            if (pauseStartedAt > 0) pausedDuration += now - pauseStartedAt;
+            pauseStartedAt = 0;
+            isPaused = false;
+        }
         pauseOverlay.classList.toggle("active", isPaused);
     }
 });
@@ -1512,7 +1527,7 @@ function damagePlayer(amount, time) {
     setTimeout(() => { playerDot.classList.remove("hurt"); }, 200);
     
     updatePlayerHP();
-    if (playerHp <= 0) triggerDeath("you got destroyed");
+    if (playerHp <= 0) triggerDeath("Annihilated by The Destroyer.");
 }
 
 function updatePlayerHP() {
@@ -1543,6 +1558,8 @@ function triggerWin() {
 
 function restartGame() {
     isPaused = false;
+    pauseStartedAt = 0;
+    pausedDuration = 0;
     isDead = false;
     isWon = false;
     isDying = false;
@@ -1722,6 +1739,7 @@ function spawnEdgeSpikeWave(time) {
 function gameLoop(time) {
     requestAnimationFrame(gameLoop);
     if (isPaused || isDead || isWon) return;
+    time = getGameTime(time);
 
     checkPhase2SkipShortcut();
 
@@ -2415,14 +2433,14 @@ function gameLoop(time) {
                 }
                 else if (chosen === 5) {
                     bossState = "P2_CENTER_SPIKE";
-                    stateTimer = time + 4200;
+                    stateTimer = time + 5200;
                     bossProjectiles.push({
                         type: "center_safe_spikes",
                         cx: innerWidth / 2,
                         cy: innerHeight / 2,
                         safeRadius: 65,
-                        warningEndTime: time + 2500,
-                        attackEndTime: time + 3800,
+                        warningEndTime: time + 3500,
+                        attackEndTime: time + 4800,
                         state: "warning"
                     });
                 }
