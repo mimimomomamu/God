@@ -411,152 +411,159 @@ img {
     box-shadow: 0 0 15px rgba(255,0,0,.5);
 }
 
-/* Mobile controls */
-#mobile-toggle {
+/* Mobile controls + mobile-only presentation */
+#mobile-toggle,
+#mobile-effects-toggle {
     position: fixed;
-    top: 14px;
-    right: 14px;
-    width: 38px;
-    height: 38px;
+    top: max(12px, env(safe-area-inset-top));
+    width: 42px;
+    height: 42px;
     z-index: 1000;
     border: 2px solid rgba(255,255,255,.65);
-    border-radius: 6px;
-    background: rgba(20,20,20,.75);
+    border-radius: 10px;
+    background: rgba(20,20,20,.78);
     color: #fff;
-    font-size: 18px;
     cursor: pointer;
     pointer-events: auto;
     touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
 }
+#mobile-toggle {
+    right: max(12px, env(safe-area-inset-right));
+    font-size: 19px;
+}
+#mobile-effects-toggle {
+    left: max(12px, env(safe-area-inset-left));
+    display: none;
+    font-size: 0;
+}
+#mobile-effects-toggle::before {
+    content: "";
+    position: absolute;
+    inset: 9px;
+    border: 2px solid rgba(255,255,255,.78);
+    border-radius: 50%;
+}
+#mobile-effects-toggle::after {
+    content: "";
+    position: absolute;
+    width: 2px;
+    height: 26px;
+    left: 18px;
+    top: 6px;
+    background: rgba(255,255,255,.9);
+    transform: rotate(45deg);
+    transform-origin: center;
+    border-radius: 2px;
+}
+#mobile-effects-toggle.off {
+    opacity: .65;
+    border-color: rgba(255,80,80,.7);
+}
+#mobile-effects-toggle.off::after { background: #ff4444; }
 #mobile-controls {
     position: fixed;
     inset: 0;
     z-index: 900;
     display: none;
     pointer-events: none;
+    touch-action: none;
 }
 #mobile-controls.active { display: block; }
 .mobile-joystick {
     position: absolute;
-    width: 150px;
-    height: 150px;
+    width: clamp(112px, 18vw, 154px);
+    height: clamp(112px, 18vw, 154px);
     border: 2px solid rgba(255,255,255,.32);
     border-radius: 50%;
     background: rgba(255,255,255,.06);
     pointer-events: auto;
     touch-action: none;
+    contain: layout paint;
 }
-#move-joystick { left: 30px; bottom: 35px; }
-#aim-joystick { right: 30px; bottom: 35px; }
+#move-joystick {
+    left: max(18px, env(safe-area-inset-left));
+    bottom: max(18px, env(safe-area-inset-bottom));
+}
+#aim-joystick {
+    right: max(18px, env(safe-area-inset-right));
+    bottom: max(18px, env(safe-area-inset-bottom));
+}
 .mobile-stick {
     position: absolute;
     left: 50%;
     top: 50%;
-    width: 58px;
-    height: 58px;
-    margin-left: -29px;
-    margin-top: -29px;
+    width: clamp(46px, 7vw, 60px);
+    height: clamp(46px, 7vw, 60px);
+    margin-left: clamp(-30px, -3.5vw, -23px);
+    margin-top: clamp(-30px, -3.5vw, -23px);
     border-radius: 50%;
     background: rgba(255,255,255,.28);
     border: 2px solid rgba(255,255,255,.65);
     box-shadow: 0 0 12px rgba(255,255,255,.18);
     pointer-events: none;
 }
-
-/* Mobile presentation / performance layer */
-#background-toggle {
-    position: fixed;
-    top: 14px;
-    left: 14px;
-    width: 38px;
-    height: 38px;
-    z-index: 1000;
-    border: 2px solid rgba(255,255,255,.65);
-    border-radius: 6px;
-    background: rgba(20,20,20,.75);
-    cursor: pointer;
-    pointer-events: auto;
-    touch-action: manipulation;
-}
-#background-toggle::before,
-#background-toggle::after {
-    content: "";
-    position: absolute;
-    left: 9px;
-    right: 9px;
-    height: 2px;
-    background: rgba(255,255,255,.8);
-    border-radius: 2px;
-    transform: rotate(-22deg);
-}
-#background-toggle::before { top: 13px; }
-#background-toggle::after { top: 21px; }
-#background-toggle.disabled {
-    opacity: .5;
-    border-color: rgba(255,255,255,.3);
-}
-#background-toggle.disabled::before,
-#background-toggle.disabled::after {
-    background: rgba(255,255,255,.35);
-}
-#orientation-overlay {
+.mobile-rotate-hint {
     display: none;
     position: fixed;
     inset: 0;
-    z-index: 2000;
+    z-index: 1100;
     align-items: center;
     justify-content: center;
-    color: #fff;
     background: #000;
-    font-size: 24px;
+    color: #fff;
+    font-size: clamp(16px, 3vw, 24px);
     font-weight: 900;
-    letter-spacing: 2px;
+    letter-spacing: 1px;
     text-align: center;
+    padding: 24px;
     pointer-events: none;
 }
-body.mobile-mode #mobile-toggle,
-body.mobile-mode #background-toggle {
-    width: 44px;
-    height: 44px;
-    top: max(10px, env(safe-area-inset-top));
+.mobile-rotate-hint::before {
+    content: "↻";
+    display: block;
+    font-size: 58px;
+    margin-bottom: 12px;
 }
-body.mobile-mode #background-toggle { left: max(10px, env(safe-area-inset-left)); }
-body.mobile-mode #mobile-toggle { right: max(10px, env(safe-area-inset-right)); }
-body.mobile-mode .mobile-joystick {
-    width: min(27vw, 170px);
-    height: min(27vw, 170px);
+@media (max-width: 900px) and (orientation: portrait) {
+    body.mobile-mode .mobile-rotate-hint { display: flex; flex-direction: column; }
 }
-body.mobile-mode #move-joystick { left: max(18px, env(safe-area-inset-left)); bottom: max(18px, env(safe-area-inset-bottom)); }
-body.mobile-mode #aim-joystick { right: max(18px, env(safe-area-inset-right)); bottom: max(18px, env(safe-area-inset-bottom)); }
-body.mobile-mode .mobile-stick {
-    width: 64px;
-    height: 64px;
-    margin-left: -32px;
-    margin-top: -32px;
+body.mobile-mode {
+    overscroll-behavior: none;
+    touch-action: none;
+}
+body.mobile-mode .player-dot {
+    width: 10px;
+    height: 10px;
+    box-shadow: 0 0 7px #fff, 0 0 14px #fff;
+}
+body.mobile-mode .player-triangle {
+    left: 9px;
+    top: -4px;
+    border-top-width: 4px;
+    border-bottom-width: 4px;
+    border-left-width: 7px;
+    filter: drop-shadow(0 0 4px #fff) drop-shadow(0 0 7px #fff);
 }
 body.mobile-mode .player-hp-container {
-    left: max(18px, env(safe-area-inset-left));
-    bottom: max(18px, env(safe-area-inset-bottom));
-    transform: scale(.9);
-    transform-origin: bottom left;
+    left: max(14px, env(safe-area-inset-left));
+    bottom: max(14px, env(safe-area-inset-bottom));
+    width: min(180px, 34vw);
 }
 body.mobile-mode .boss-hp-container {
-    top: max(14px, env(safe-area-inset-top));
-    width: min(62vw, 420px);
+    top: max(12px, env(safe-area-inset-top));
+    width: min(330px, 50vw);
 }
-body.mobile-mode .pause-title { font-size: clamp(34px, 7vw, 48px); }
-body.mobile-mode .pause-subtitle { max-width: 86vw; text-align: center; font-size: 14px; }
-@media (orientation: portrait) and (pointer: coarse) {
-    body.mobile-mode #orientation-overlay.active { display: flex; }
-}
+body.mobile-mode .boss-hp-name { font-size: 13px; }
+body.mobile-mode .pause-title { font-size: clamp(32px, 7vw, 48px); }
 </style>
 </head>
 
 <body>
-<button id="background-toggle" aria-label="Toggle background lines" title="Toggle background lines"></button>
-<button id="mobile-toggle" aria-label="Toggle mobile mode">☰</button>
-<div id="orientation-overlay" aria-hidden="true">ROTATE DEVICE</div>
+<button id="mobile-toggle" aria-label="Toggle mobile mode" title="Mobile mode">☰</button>
+<button id="mobile-effects-toggle" aria-label="Toggle background effects" title="Toggle background effects"></button>
 <div id="mobile-controls">
+    <div class="mobile-rotate-hint" aria-hidden="true">Rotate your device to landscape</div>
     <div class="mobile-joystick" id="move-joystick"><div class="mobile-stick"></div></div>
     <div class="mobile-joystick" id="aim-joystick"><div class="mobile-stick"></div></div>
 </div>
@@ -712,15 +719,18 @@ let targetFloorSpikeHeight = 0;
 let meteorSpeedMultiplier = 1.0;
 
 const bgMeteorLines = [];
-const NUM_METEOR_LINES = 45;
+const MOBILE_METEOR_LINES = 78;
+const NORMAL_METEOR_LINES = 45;
 
 function initMeteorShower() {
     bgMeteorLines.length = 0;
-    const lineCount = (typeof mobileMode !== "undefined" && mobileMode) ? 90 : NUM_METEOR_LINES;
-    for (let i = 0; i < lineCount; i++) {
+    const count = document.body.classList.contains("mobile-mode")
+        ? MOBILE_METEOR_LINES
+        : NORMAL_METEOR_LINES;
+    for (let i = 0; i < count; i++) {
         bgMeteorLines.push({
-            x: Math.random() * gameWidth(),
-            y: Math.random() * gameHeight(),
+            x: Math.random() * innerWidth,
+            y: Math.random() * innerHeight,
             length: 25 + Math.random() * 45,
             speed: 0.8 + Math.random() * 1.2,
             alpha: 0.12 + Math.random() * 0.28,
@@ -730,27 +740,17 @@ function initMeteorShower() {
 }
 initMeteorShower();
 
-let mouseX = gameWidth() / 2;
-let mouseY = gameHeight() / 2;
+let mouseX = innerWidth / 2;
+let mouseY = innerHeight / 2;
 let isMouseDown = false;
 let mobileMode = false;
-let backgroundLinesEnabled = true;
-const MOBILE_ZOOM = 0.72;
-let mobileFullscreenAttempted = false;
-
-function gameWidth() {
-    return (typeof mobileMode !== "undefined" && mobileMode) ? innerWidth / MOBILE_ZOOM : innerWidth;
-}
-function gameHeight() {
-    return (typeof mobileMode !== "undefined" && mobileMode) ? innerHeight / MOBILE_ZOOM : innerHeight;
-}
-function mobileSpeedFactor() {
-    return mobileMode ? (1 / MOBILE_ZOOM) : 1;
-}
+let mobileEffectsEnabled = true;
 let mobileAimDown = false;
 let mobileAimX = 1;
 let mobileAimY = 0;
 const mobileMove = { x: 0, y: 0 };
+const MOBILE_ZOOM = 0.62;
+let canvasPixelRatio = 1;
 const keys = { w:false, a:false, s:false, d:false, h:false, j:false, l:false };
 
 const maxPlayerHp = 100;
@@ -760,8 +760,8 @@ let playerInvulnTime = 0;
 const maxBossHp = 2000;
 let bossHp = maxBossHp;
 
-let playerX = gameWidth() / 2;
-let playerY = gameHeight() * .75;
+let playerX = innerWidth / 2;
+let playerY = innerHeight * .75;
 const playerHitRadius = 6;
 const playerSpeed = 5;
 const shootInterval = 100;
@@ -845,43 +845,39 @@ window.addEventListener("mouseup", (e) => {
 });
 
 const mobileToggle = document.getElementById("mobile-toggle");
-const backgroundToggle = document.getElementById("background-toggle");
-const orientationOverlay = document.getElementById("orientation-overlay");
 const mobileControls = document.getElementById("mobile-controls");
 const moveJoystick = document.getElementById("move-joystick");
 const aimJoystick = document.getElementById("aim-joystick");
 
-async function requestMobileLandscape() {
-    if (!mobileMode) return;
+const mobileEffectsToggle = document.getElementById("mobile-effects-toggle");
+
+function isMobileViewport() {
+    return mobileMode && (window.matchMedia("(pointer: coarse)").matches || innerWidth <= 900);
+}
+
+async function requestLandscape() {
     try {
-        if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
-            await document.documentElement.requestFullscreen({ navigationUI: "hide" });
+        // Orientation locking is most reliable in fullscreen on mobile browsers.
+        if (document.documentElement.requestFullscreen && !document.fullscreenElement) {
+            try {
+                await document.documentElement.requestFullscreen({ navigationUI: "hide" });
+            } catch (_) {}
         }
-    } catch (e) {}
-    try {
         if (screen.orientation && screen.orientation.lock) {
-            await screen.orientation.lock("landscape");
+            try { await screen.orientation.lock("landscape"); } catch (_) {}
         }
-    } catch (e) {}
-    updateOrientationOverlay();
+        setTimeout(resizeCanvas, 120);
+    } catch (_) {}
 }
 
-function updateOrientationOverlay() {
-    const portrait = innerHeight > innerWidth;
-    orientationOverlay.classList.toggle("active", mobileMode && portrait);
-}
-
-mobileToggle.addEventListener("click", () => {
-    mobileMode = !mobileMode;
+function updateMobilePresentation() {
     document.body.classList.toggle("mobile-mode", mobileMode);
     mobileControls.classList.toggle("active", mobileMode);
     mobileToggle.textContent = mobileMode ? "×" : "☰";
+    mobileEffectsToggle.style.display = mobileMode ? "block" : "none";
+    mobileEffectsToggle.classList.toggle("off", !mobileEffectsEnabled);
 
-    if (mobileMode) {
-        requestMobileLandscape();
-        resizeCanvas();
-        initMeteorShower();
-    } else {
+    if (!mobileMode) {
         mobileMove.x = 0;
         mobileMove.y = 0;
         mobileAimDown = false;
@@ -889,19 +885,30 @@ mobileToggle.addEventListener("click", () => {
         mobileAimY = 0;
         resetMobileStick(moveJoystick);
         resetMobileStick(aimJoystick);
-        if (document.fullscreenElement && document.exitFullscreen) {
-            document.exitFullscreen().catch(() => {});
+        if (screen.orientation && screen.orientation.unlock) {
+            try { screen.orientation.unlock(); } catch (_) {}
         }
-        orientationOverlay.classList.remove("active");
-        resizeCanvas();
-        initMeteorShower();
+        if (document.fullscreenElement && document.exitFullscreen) {
+            try { document.exitFullscreen(); } catch (_) {}
+        }
+    } else {
+        requestLandscape();
     }
+
+    initMeteorShower();
+    resizeCanvas();
+}
+
+mobileToggle.addEventListener("click", () => {
+    mobileMode = !mobileMode;
+    updateMobilePresentation();
 });
 
-backgroundToggle.addEventListener("click", () => {
-    backgroundLinesEnabled = !backgroundLinesEnabled;
-    backgroundToggle.classList.toggle("disabled", !backgroundLinesEnabled);
-    if (!backgroundLinesEnabled) bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
+mobileEffectsToggle.addEventListener("click", () => {
+    if (!mobileMode) return;
+    mobileEffectsEnabled = !mobileEffectsEnabled;
+    mobileEffectsToggle.classList.toggle("off", !mobileEffectsEnabled);
+    if (!mobileEffectsEnabled) bgCtx.clearRect(0, 0, innerWidth, innerHeight);
 });
 
 function setMobileStick(joystick, clientX, clientY) {
@@ -1065,15 +1072,18 @@ window.addEventListener("keyup", (e) => {
 });
 
 function getDestroyerScale() {
-    return (gameWidth() / 704) * 0.82;
+    const normalScale = (innerWidth / 704) * 0.82;
+    // Mobile-only zoom-out: the boss takes less of the landscape viewport,
+    // leaving a much larger, more playable dodge area.
+    return mobileMode ? normalScale * MOBILE_ZOOM : normalScale;
 }
 
 function getPhase2CenterPosition() {
     const scale = getDestroyerScale();
     const bodyCenterLocalX = 305 + 78 / 2;
     const transformOriginX = 704 / 2;
-    const targetBodyCenterX = gameWidth() / 2;
-    const targetBodyCenterY = gameHeight() * 0.28;
+    const targetBodyCenterX = innerWidth / 2;
+    const targetBodyCenterY = innerHeight * 0.28;
     const bodyCenterLocalY = 176 + 75 / 2;
     return {
         x: targetBodyCenterX - transformOriginX - (bodyCenterLocalX - transformOriginX) * scale,
@@ -1083,17 +1093,16 @@ function getPhase2CenterPosition() {
 
 function updateSceneTransforms() {
     const scale = getDestroyerScale() * bossExtraScale;
-    const transformStr = `scale(${scale * (mobileMode ? MOBILE_ZOOM : 1)})`;
+    const transformStr = `scale(${scale})`;
     
     sceneBack.style.transform = transformStr;
     sceneFront.style.transform = transformStr;
     
-    const viewScale = mobileMode ? MOBILE_ZOOM : 1;
-    sceneBack.style.left = (destroyerX * viewScale) + "px";
-    sceneBack.style.top = (destroyerY * viewScale) + "px";
-
-    sceneFront.style.left = (destroyerX * viewScale) + "px";
-    sceneFront.style.top = (destroyerY * viewScale) + "px";
+    sceneBack.style.left = destroyerX + "px";
+    sceneBack.style.top = destroyerY + "px";
+    
+    sceneFront.style.left = destroyerX + "px";
+    sceneFront.style.top = destroyerY + "px";
 }
 
 function positionDestroyerAtCenter() {
@@ -1109,22 +1118,33 @@ function positionDestroyerAtCenter() {
 }
 
 function resizeCanvas() {
-    canvas.width = gameWidth();
-    canvas.height = gameHeight();
-    bgCanvas.width = gameWidth();
-    bgCanvas.height = gameHeight();
+    const cssWidth = Math.max(1, Math.floor(innerWidth));
+    const cssHeight = Math.max(1, Math.floor(innerHeight));
+    canvasPixelRatio = mobileMode
+        ? Math.min(window.devicePixelRatio || 1, 1.75)
+        : 1;
+
+    canvas.width = Math.floor(cssWidth * canvasPixelRatio);
+    canvas.height = Math.floor(cssHeight * canvasPixelRatio);
+    bgCanvas.width = Math.floor(cssWidth * canvasPixelRatio);
+    bgCanvas.height = Math.floor(cssHeight * canvasPixelRatio);
+
+    canvas.style.width = cssWidth + "px";
+    canvas.style.height = cssHeight + "px";
+    bgCanvas.style.width = cssWidth + "px";
+    bgCanvas.style.height = cssHeight + "px";
+
+    // Keep all game math in CSS pixels while rendering mobile canvases
+    // at a sharper backing resolution.
+    ctx.setTransform(canvasPixelRatio, 0, 0, canvasPixelRatio, 0, 0);
+    bgCtx.setTransform(canvasPixelRatio, 0, 0, canvasPixelRatio, 0, 0);
     positionDestroyerAtCenter();
 }
-window.addEventListener("resize", () => {
-    resizeCanvas();
-    updateOrientationOverlay();
-});
-window.addEventListener("orientationchange", () => {
-    setTimeout(() => {
-        resizeCanvas();
-        updateOrientationOverlay();
-    }, 120);
-});
+window.addEventListener("resize", resizeCanvas);
+window.addEventListener("orientationchange", () => setTimeout(resizeCanvas, 120));
+if (screen.orientation && screen.orientation.addEventListener) {
+    screen.orientation.addEventListener("change", () => setTimeout(resizeCanvas, 120));
+}
 
 function resetPhaseVisuals() {
     wingLeft.style.display = "none";
@@ -1359,7 +1379,7 @@ function updateWallClosingPhase(time) {
     wallCloseProgress = Math.min(1, Math.max(0, (elapsed - 350) / 5200));
 
     // The red walls close in from both sides. The first small spikes appear immediately.
-    const wallWidth = 24 + wallCloseProgress * (gameWidth() * 0.46);
+    const wallWidth = 24 + wallCloseProgress * (innerWidth * 0.46);
 
     // During the final phase the hands leave the screen and stay there.
     // They do not follow the wall edges or return until the boss is killed.
@@ -1385,14 +1405,14 @@ function updateWallClosingPhase(time) {
         ctx.fillStyle = "#800000";
         ctx.strokeStyle = "#ff3333";
         ctx.lineWidth = 3;
-        ctx.fillRect(0, 0, wallWidth, gameHeight());
-        ctx.strokeRect(0, 0, wallWidth, gameHeight());
-        ctx.fillRect(gameWidth() - wallWidth, 0, wallWidth, gameHeight());
-        ctx.strokeRect(gameWidth() - wallWidth, 0, wallWidth, gameHeight());
+        ctx.fillRect(0, 0, wallWidth, innerHeight);
+        ctx.strokeRect(0, 0, wallWidth, innerHeight);
+        ctx.fillRect(innerWidth - wallWidth, 0, wallWidth, innerHeight);
+        ctx.strokeRect(innerWidth - wallWidth, 0, wallWidth, innerHeight);
 
         ctx.fillStyle = "#ff3333";
         for (let i = 0; i < spikeCount; i++) {
-            const y = (i + 0.5) * gameHeight() / spikeCount;
+            const y = (i + 0.5) * innerHeight / spikeCount;
             const spikeDepth = 28 + wallCloseProgress * 35;
 
             ctx.beginPath();
@@ -1403,9 +1423,9 @@ function updateWallClosingPhase(time) {
             ctx.fill();
 
             ctx.beginPath();
-            ctx.moveTo(gameWidth() - wallWidth, y - 13);
-            ctx.lineTo(gameWidth() - wallWidth - spikeDepth, y);
-            ctx.lineTo(gameWidth() - wallWidth, y + 13);
+            ctx.moveTo(innerWidth - wallWidth, y - 13);
+            ctx.lineTo(innerWidth - wallWidth - spikeDepth, y);
+            ctx.lineTo(innerWidth - wallWidth, y + 13);
             ctx.closePath();
             ctx.fill();
         }
@@ -1414,7 +1434,7 @@ function updateWallClosingPhase(time) {
     // Being caught by the closing walls damages the player heavily, but the boss
     // remains vulnerable throughout the sequence.
     const safeLeft = wallWidth + 8;
-    const safeRight = gameWidth() - wallWidth - 8;
+    const safeRight = innerWidth - wallWidth - 8;
     if (!isDead && !isWon && (playerX < safeLeft || playerX > safeRight)) {
         damagePlayer(0.35, time);
     }
@@ -1442,8 +1462,8 @@ function updateWallClosingPhase(time) {
         wallReleaseProgress = releaseProgress;
         wallCloseProgress = 1;
 
-        const retreatDistance = releaseProgress * (gameWidth() * 1.25);
-        const releaseWallWidth = 24 + gameWidth() * 0.46;
+        const retreatDistance = releaseProgress * (innerWidth * 1.25);
+        const releaseWallWidth = 24 + innerWidth * 0.46;
         ctx.save();
         ctx.globalAlpha = 1;
         ctx.fillStyle = "#800000";
@@ -1452,14 +1472,14 @@ function updateWallClosingPhase(time) {
         // Re-use the exact walls already on screen and translate those same
         // walls outward. This prevents a second set of walls from appearing.
         const leftWallX = -retreatDistance;
-        const rightWallX = gameWidth() - releaseWallWidth + retreatDistance;
-        ctx.fillRect(leftWallX, 0, releaseWallWidth, gameHeight());
-        ctx.strokeRect(leftWallX, 0, releaseWallWidth, gameHeight());
-        ctx.fillRect(rightWallX, 0, releaseWallWidth, gameHeight());
-        ctx.strokeRect(rightWallX, 0, releaseWallWidth, gameHeight());
+        const rightWallX = innerWidth - releaseWallWidth + retreatDistance;
+        ctx.fillRect(leftWallX, 0, releaseWallWidth, innerHeight);
+        ctx.strokeRect(leftWallX, 0, releaseWallWidth, innerHeight);
+        ctx.fillRect(rightWallX, 0, releaseWallWidth, innerHeight);
+        ctx.strokeRect(rightWallX, 0, releaseWallWidth, innerHeight);
         ctx.fillStyle = "#ff3333";
         for (let i = 0; i < spikeCount; i++) {
-            const y = (i + 0.5) * gameHeight() / spikeCount;
+            const y = (i + 0.5) * innerHeight / spikeCount;
             const spikeDepth = 60;
             ctx.beginPath();
             ctx.moveTo(leftWallX + releaseWallWidth, y - 13);
@@ -1555,7 +1575,7 @@ function processEndingCinematic(time) {
 
     if (endingState === "SUCTION_PREP") {
         // Very slow downward pull while the background accelerates down-right.
-        playerY = Math.min(gameHeight() - 20, playerY + 0.18);
+        playerY = Math.min(innerHeight - 20, playerY + 0.18);
         // UI begins shaking toward down-right before the actual suction.
         const shakeT = Math.min(1, (time - endingStateStartTime) / 900);
         const shakeX = (3 + shakeT * 8) * Math.sin(time * 0.045);
@@ -1595,7 +1615,7 @@ function processEndingCinematic(time) {
         const distance = 2600 * t * t;
         const spin = 1440 * t;
         playerEl.classList.remove("final-player-big");
-        playerEl.style.transform = `translate(${(playerX + distance) * (mobileMode ? MOBILE_ZOOM : 1)}px, ${(playerY + distance) * (mobileMode ? MOBILE_ZOOM : 1)}px) rotate(${spin}deg) scale(${mobileMode ? MOBILE_ZOOM : 1})`;
+        playerEl.style.transform = `translate(${playerX + distance}px, ${playerY + distance}px) rotate(${spin}deg)`;
         playerEl.style.opacity = String(1 - t * .15);
         if (t >= 1) {
             playerEl.style.opacity = "0";
@@ -1622,7 +1642,7 @@ function processEndingCinematic(time) {
             bossHpContainer.style.display = "none";
             playerEl.classList.add("final-player-big");
             playerEl.style.opacity = "1";
-            playerEl.style.transform = `translate(${gameWidth()/2 * (mobileMode ? MOBILE_ZOOM : 1)}px, ${gameHeight()/2 * (mobileMode ? MOBILE_ZOOM : 1)}px) scale(${mobileMode ? MOBILE_ZOOM : 1})`;
+            playerEl.style.transform = `translate(${innerWidth/2}px, ${innerHeight/2}px)`;
         }
         return;
     }
@@ -1742,8 +1762,8 @@ function restartGame() {
 
     playerHp = maxPlayerHp;
     bossHp = maxBossHp;
-    playerX = gameWidth() / 2;
-    playerY = gameHeight() * .75;
+    playerX = innerWidth / 2;
+    playerY = innerHeight * .75;
     playerBullets.length = 0;
     particles.length = 0;
     fallingParts = [];
@@ -1827,29 +1847,29 @@ function spawnEdgeSpikeWave(time) {
             angle = baseAngle + (Math.random() - 0.5) * 0.35;
 
             if (Math.cos(angle) > 0) startX = -60;
-            else startX = gameWidth() + 60;
+            else startX = innerWidth + 60;
             if (Math.sin(angle) > 0) startY = -60;
-            else startY = gameHeight() + 60;
+            else startY = innerHeight + 60;
 
-            if (Math.random() < 0.5) startX = Math.random() * gameWidth();
-            else startY = Math.random() * gameHeight();
+            if (Math.random() < 0.5) startX = Math.random() * innerWidth;
+            else startY = Math.random() * innerHeight;
         } else {
             const edge = ["top", "bottom", "left", "right"][Math.floor(Math.random() * 4)];
             if (edge === "top") {
-                startX = Math.random() * gameWidth();
+                startX = Math.random() * innerWidth;
                 startY = -60;
                 angle = Math.PI / 2 + (Math.random() - 0.5) * 0.4;
             } else if (edge === "bottom") {
-                startX = Math.random() * gameWidth();
-                startY = gameHeight() + 60;
+                startX = Math.random() * innerWidth;
+                startY = innerHeight + 60;
                 angle = -Math.PI / 2 + (Math.random() - 0.5) * 0.4;
             } else if (edge === "left") {
                 startX = -60;
-                startY = Math.random() * gameHeight();
+                startY = Math.random() * innerHeight;
                 angle = 0 + (Math.random() - 0.5) * 0.4;
             } else {
-                startX = gameWidth() + 60;
-                startY = Math.random() * gameHeight();
+                startX = innerWidth + 60;
+                startY = Math.random() * innerHeight;
                 angle = Math.PI + (Math.random() - 0.5) * 0.4;
             }
         }
@@ -1860,7 +1880,7 @@ function spawnEdgeSpikeWave(time) {
             y: startY,
             angle: angle,
             width: 32,
-            length: Math.hypot(gameWidth(), gameHeight()) * 1.25,
+            length: Math.hypot(innerWidth, innerHeight) * 1.25,
             triggerTime: time + 700 + Math.random() * 400,
             endTime: time + 1600,
             state: "warning"
@@ -1874,13 +1894,11 @@ function gameLoop(time) {
 
     checkPhase2SkipShortcut();
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    bgCtx.clearRect(0, 0, bgCanvas.width, bgCanvas.height);
+    ctx.clearRect(0, 0, innerWidth, innerHeight);
+    bgCtx.clearRect(0, 0, innerWidth, innerHeight);
     const scale = getDestroyerScale();
 
-    if (!backgroundLinesEnabled) {
-        // Background lines can be disabled independently for low-end phones.
-    } else {
+    if (mobileEffectsEnabled || !mobileMode) {
     bgCtx.save();
     bgCtx.strokeStyle = "rgba(255, 255, 255, 0.4)";
     bgCtx.lineCap = "round";
@@ -1890,15 +1908,15 @@ function gameLoop(time) {
             const speed = 10 + line.speed * 7;
             line.x += speed;
             line.y += speed;
-            if (line.x - line.length > gameWidth() || line.y - line.length > gameHeight()) {
+            if (line.x - line.length > innerWidth || line.y - line.length > innerHeight) {
                 line.x = -Math.random() * 300;
                 line.y = -Math.random() * 300;
             }
         } else {
             line.y -= line.speed * meteorSpeedMultiplier;
             if (line.y + line.length < 0) {
-                line.y = gameHeight() + Math.random() * 40;
-                line.x = Math.random() * gameWidth();
+                line.y = innerHeight + Math.random() * 40;
+                line.x = Math.random() * innerWidth;
             }
         }
 
@@ -1918,26 +1936,29 @@ function gameLoop(time) {
     }
 
     if (inP2Transition && !isDying && !endingControlsLocked) {
-        playerY = Math.min(gameHeight() - 20, playerY + 2.6);
+        playerY = Math.min(innerHeight - 20, playerY + 2.6);
     }
 
     // Normal controls remain active in the fog room, but are disabled during
     // the suction/death portion of the ending.
     if (!endingControlsLocked || endingState === "FOG_ROOM") {
         if (mobileMode) {
-            playerX += mobileMove.x * playerSpeed * mobileSpeedFactor();
-            playerY += mobileMove.y * playerSpeed * mobileSpeedFactor();
-            playerX = Math.max(20, Math.min(gameWidth() - 20, playerX));
-            playerY = Math.max(20, Math.min(gameHeight() - 20, playerY));
+            const moveLength = Math.hypot(mobileMove.x, mobileMove.y);
+            const moveScale = moveLength > 1 ? 1 / moveLength : 1;
+            const mobileSpeedBoost = isMobileViewport() ? 1.12 : 1;
+            playerX += mobileMove.x * moveScale * playerSpeed * mobileSpeedBoost;
+            playerY += mobileMove.y * moveScale * playerSpeed * mobileSpeedBoost;
+            playerX = Math.max(20, Math.min(innerWidth - 20, playerX));
+            playerY = Math.max(20, Math.min(innerHeight - 20, playerY));
         } else {
             if (keys.w && playerY > 20) playerY -= playerSpeed;
-            if (keys.s && playerY < gameHeight() - 20) playerY += playerSpeed;
+            if (keys.s && playerY < innerHeight - 20) playerY += playerSpeed;
             if (keys.a && playerX > 20) playerX -= playerSpeed;
-            if (keys.d && playerX < gameWidth() - 20) playerX += playerSpeed;
+            if (keys.d && playerX < innerWidth - 20) playerX += playerSpeed;
         }
     }
 
-    playerEl.style.transform = `translate(${playerX * (mobileMode ? MOBILE_ZOOM : 1)}px, ${playerY * (mobileMode ? MOBILE_ZOOM : 1)}px) scale(${mobileMode ? MOBILE_ZOOM : 1})`;
+    playerEl.style.transform = `translate(${playerX}px, ${playerY}px)`;
     
     let angleToMouse;
     if (mobileMode && mobileAimDown) {
@@ -1953,8 +1974,8 @@ function gameLoop(time) {
     if ((isMouseDown || mobileShoot) && !endingControlsLocked && (!isDying || wallClosingActive) && time > lastShootTime + shootInterval) {
         playerBullets.push({
             x: playerX, y: playerY,
-            vx: Math.cos(angleToMouse) * 15 * mobileSpeedFactor(),
-            vy: Math.sin(angleToMouse) * 15 * mobileSpeedFactor()
+            vx: Math.cos(angleToMouse) * 15,
+            vy: Math.sin(angleToMouse) * 15
         });
         lastShootTime = time;
     }
@@ -1988,11 +2009,11 @@ function gameLoop(time) {
                     bossState = "ATTACK1_MOVE";
                     const bossHalfWidth = 352 * scale;
                     const minX = 100 - bossHalfWidth;
-                    const maxX = gameWidth() - 100 - bossHalfWidth; 
+                    const maxX = innerWidth - 100 - bossHalfWidth; 
                     bossTargetX = Math.max(minX, Math.min(maxX, playerX - bossHalfWidth)); 
                     
                     const minY = -50;
-                    const maxY = gameHeight() * 0.4;
+                    const maxY = innerHeight * 0.4;
                     bossTargetY = Math.max(minY, Math.min(maxY, playerY - 450 * scale));
                 } else if (chosen === 2) {
                     bossState = "ATTACK2_PREP";
@@ -2019,8 +2040,8 @@ function gameLoop(time) {
                     const bodyCenterLocalX = 344;
                     const transformOriginX = 352;
                     const bodyCenterLocalY = 213.5;
-                    const targetX = gameWidth() / 2;
-                    const targetY = gameHeight() / 2;
+                    const targetX = innerWidth / 2;
+                    const targetY = innerHeight / 2;
                     
                     bossTargetX = targetX - transformOriginX - (bodyCenterLocalX - transformOriginX) * scale;
                     bossTargetY = targetY - bodyCenterLocalY * scale;
@@ -2266,7 +2287,7 @@ function gameLoop(time) {
                         y: slamY,
                         angle: angle,
                         width: 32,
-                        length: Math.hypot(gameWidth(), gameHeight()) * 1.5,
+                        length: Math.hypot(innerWidth, innerHeight) * 1.5,
                         triggerTime: time + 350,
                         endTime: time + 1150
                     });
@@ -2386,11 +2407,11 @@ function gameLoop(time) {
         if (p2StarAttackUnlocked && activeStarOutlines.length < 2 && time > nextStarSpawnTime) {
             const starRadius = (78 / 2) * scale;
 
-            let sX = 150 + Math.random() * (gameWidth() - 300);
-            let sY = 150 + Math.random() * (gameHeight() - 300);
+            let sX = 150 + Math.random() * (innerWidth - 300);
+            let sY = 150 + Math.random() * (innerHeight - 300);
             if (Math.hypot(sX - (destroyerX + 352), sY - (destroyerY + 213.5)) < 220) {
-                sX = gameWidth() * 0.2 + Math.random() * (gameWidth() * 0.6);
-                sY = gameHeight() * 0.2 + Math.random() * (gameHeight() * 0.5);
+                sX = innerWidth * 0.2 + Math.random() * (innerWidth * 0.6);
+                sY = innerHeight * 0.2 + Math.random() * (innerHeight * 0.5);
             }
 
             activeStarOutlines.push({
@@ -2537,8 +2558,8 @@ function gameLoop(time) {
                     stateTimer = time + 4200;
                     bossProjectiles.push({
                         type: "center_safe_spikes",
-                        cx: gameWidth() / 2,
-                        cy: gameHeight() / 2,
+                        cx: innerWidth / 2,
+                        cy: innerHeight / 2,
                         safeRadius: 65,
                         warningEndTime: time + 2500,
                         attackEndTime: time + 3800,
@@ -2644,7 +2665,7 @@ function gameLoop(time) {
                 for (let r = 0; r < 4; r++) {
                     bgProjectiles.push({
                         type: "raindrop",
-                        x: Math.random() * gameWidth(),
+                        x: Math.random() * innerWidth,
                         y: -30,
                         vy: 13 + Math.random() * 8,
                         vx: (Math.random() - 0.5) * 1.5,
@@ -2753,20 +2774,20 @@ function gameLoop(time) {
         ctx.lineWidth = 1.5;
 
         const spikeW = 20;
-        const count = Math.ceil(gameWidth() / spikeW);
+        const count = Math.ceil(innerWidth / spikeW);
         ctx.beginPath();
-        ctx.moveTo(0, gameHeight());
+        ctx.moveTo(0, innerHeight);
         for (let s = 0; s <= count; s++) {
             const sx = s * spikeW;
-            ctx.lineTo(sx - spikeW / 2, gameHeight() - floorSpikeHeight);
-            ctx.lineTo(sx, gameHeight());
+            ctx.lineTo(sx - spikeW / 2, innerHeight - floorSpikeHeight);
+            ctx.lineTo(sx, innerHeight);
         }
         ctx.closePath();
         ctx.fill();
         ctx.stroke();
         ctx.restore();
 
-        if (!isDying && !isDead && playerY >= gameHeight() - floorSpikeHeight - playerHitRadius) {
+        if (!isDying && !isDead && playerY >= innerHeight - floorSpikeHeight - playerHitRadius) {
             damagePlayer(10, time);
         }
     }
@@ -2794,7 +2815,7 @@ function gameLoop(time) {
             continue;
         }
 
-        if (p.y > gameHeight() + 40) {
+        if (p.y > innerHeight + 40) {
             bgProjectiles.splice(i, 1);
             continue;
         }
@@ -2913,7 +2934,7 @@ function gameLoop(time) {
             }
         }
 
-        if (b.x < 0 || b.x > gameWidth() || b.y < 0 || b.y > gameHeight()) {
+        if (b.x < 0 || b.x > innerWidth || b.y < 0 || b.y > innerHeight) {
             playerBullets.splice(i, 1);
         }
     }
@@ -2960,7 +2981,7 @@ function gameLoop(time) {
 
                 for (let s = 0; s < numSpikes; s++) {
                     const angle = (s * Math.PI * 2) / numSpikes;
-                    const maxDist = Math.hypot(gameWidth(), gameHeight());
+                    const maxDist = Math.hypot(innerWidth, innerHeight);
                     const tipX = p.cx + Math.cos(angle) * (p.safeRadius + (maxDist - p.safeRadius) * (1 - progress));
                     const tipY = p.cy + Math.sin(angle) * (p.safeRadius + (maxDist - p.safeRadius) * (1 - progress));
 
@@ -3015,7 +3036,7 @@ function gameLoop(time) {
             ctx.restore();
             
             if (p.state === "returning" && 
-               (p.x < -300 || p.x > gameWidth() + 300 || p.y < -300 || p.y > gameHeight() + 300)) {
+               (p.x < -300 || p.x > innerWidth + 300 || p.y < -300 || p.y > innerHeight + 300)) {
                 bossProjectiles.splice(i, 1);
                 continue;
             }
@@ -3032,7 +3053,7 @@ function gameLoop(time) {
             ctx.fill();
             ctx.shadowBlur = 0;
             
-            if (p.x < -20 || p.x > gameWidth() + 20 || p.y < -20 || p.y > gameHeight() + 20) {
+            if (p.x < -20 || p.x > innerWidth + 20 || p.y < -20 || p.y > innerHeight + 20) {
                 bossProjectiles.splice(i, 1);
                 continue;
             }
@@ -3055,7 +3076,7 @@ function gameLoop(time) {
             ctx.fill();
             ctx.restore();
 
-            if (p.x < -50 || p.x > gameWidth() + 50 || p.y < -50 || p.y > gameHeight() + 50) {
+            if (p.x < -50 || p.x > innerWidth + 50 || p.y < -50 || p.y > innerHeight + 50) {
                 bossProjectiles.splice(i, 1);
                 continue;
             }
@@ -3088,7 +3109,7 @@ function gameLoop(time) {
             ctx.fill();
             ctx.restore();
 
-            if (p.alpha <= 0 || p.x < -120 || p.x > gameWidth() + 120 || p.y < -120 || p.y > gameHeight() + 120) {
+            if (p.alpha <= 0 || p.x < -120 || p.x > innerWidth + 120 || p.y < -120 || p.y > innerHeight + 120) {
                 bossProjectiles.splice(i, 1);
                 continue;
             }
@@ -3120,13 +3141,13 @@ function gameLoop(time) {
             ctx.fill();
             ctx.restore();
 
-            if (p.x < -60 || p.x > gameWidth() + 60 || p.y > gameHeight() + 60) {
+            if (p.x < -60 || p.x > innerWidth + 60 || p.y > innerHeight + 60) {
                 bossProjectiles.splice(i, 1);
                 continue;
             }
         }
         else if (p.type === "star_strand") {
-            if (time > p.expireTime || p.x < -100 || p.x > gameWidth() + 100 || p.y < -100 || p.y > gameHeight() + 100) {
+            if (time > p.expireTime || p.x < -100 || p.x > innerWidth + 100 || p.y < -100 || p.y > innerHeight + 100) {
                 bossProjectiles.splice(i, 1);
                 continue;
             }
@@ -3310,7 +3331,7 @@ function gameLoop(time) {
             ctx.fill();
             ctx.restore();
 
-            if (p.x < -100 || p.x > gameWidth() + 100 || p.y < -100 || p.y > gameHeight() + 100) {
+            if (p.x < -100 || p.x > innerWidth + 100 || p.y < -100 || p.y > innerHeight + 100) {
                 bossProjectiles.splice(i, 1);
                 continue;
             }
@@ -3431,7 +3452,7 @@ function gameLoop(time) {
             fp.el.style.top = fp.y + "px";
             fp.el.style.transform = `rotate(${fp.rot}deg)`;
 
-            if (destroyerY + fp.y * scale > gameHeight() + 180) {
+            if (destroyerY + fp.y * scale > innerHeight + 180) {
                 fp.el.style.display = "none";
                 fallingParts.splice(i, 1);
             }
